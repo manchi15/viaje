@@ -12,7 +12,7 @@ cp .env.example .env
 npm run dev
 ```
 
-Abre la dirección que muestra Vite (con esta configuración: `http://localhost:3000/viajemelgar/`); no abras `index.html` directamente ni uses un servidor estático, porque la app necesita que Vite lea `.env`.
+Abre la dirección que muestra Vite (con esta configuración: `http://localhost:3000/viaje/`); no abras `index.html` directamente ni uses un servidor estático, porque la app necesita que Vite lea `.env`.
 
 Completa `.env` con `VITE_SUPABASE_URL` y `VITE_SUPABASE_PUBLISHABLE_KEY`. No pongas nunca una secret/service-role key en variables `VITE_`.
 
@@ -40,7 +40,7 @@ Las cuentas de correo existentes no se convierten ni se borran, pero la interfaz
 
 ## GitHub Pages
 
-El proyecto debe publicarse desde la raíz con el workflow `.github/workflows/deploy.yml`, no desde la carpeta antigua `viaje/`. En el repositorio, añade las variables de Actions **VITE_SUPABASE_URL** y **VITE_SUPABASE_PUBLISHABLE_KEY** en **Settings → Secrets and variables → Actions → Variables**. Deben contener la URL del proyecto y su publishable (o anon pública) key. En **Settings → Pages → Build and deployment**, el origen debe ser **GitHub Actions**. Después de subir los cambios a `main`, comprueba que termine correctamente **Deploy NEXORA to GitHub Pages** y abre `https://nicocalderonsilva2010-arch.github.io/viajemelgar/`.
+El proyecto debe publicarse desde la raíz con el workflow `.github/workflows/deploy.yml`. En el repositorio `manchi15/viaje`, añade las variables de Actions **VITE_SUPABASE_URL** y **VITE_SUPABASE_PUBLISHABLE_KEY** en **Settings → Secrets and variables → Actions → Variables**. Deben contener la URL del proyecto y su publishable (o anon pública) key. En **Settings → Pages → Build and deployment**, el origen debe ser **GitHub Actions**. Después de subir los cambios a `main`, comprueba que termine correctamente **Deploy NEXORA to GitHub Pages** y abre `https://manchi15.github.io/viaje/`.
 
 Localmente, usa `.env`; Git lo excluye. Para compilar y previsualizar:
 
@@ -49,4 +49,4 @@ npm run build
 npm run preview
 ```
 
-Con `base` configurado para GitHub Pages, la vista previa local queda en `http://localhost:4173/viajemelgar/`. No se considera publicado hasta que el workflow de GitHub Pages finalice correctamente.
+Con `base` configurado para GitHub Pages, la vista previa local queda en `http://localhost:4173/viaje/`. No se considera publicado hasta que el workflow de GitHub Pages finalice correctamente.
