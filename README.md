@@ -1,94 +1,52 @@
-# NEXORA ESTUDIO & SAUSALITOZ Z9
+# NEXORA · álbum privado de Melgar
 
-Álbum digital para documentar el viaje a Melgar, Colombia.
+Aplicación web para los integrantes del viaje. Usa Vite en el frontend y Supabase Auth, Postgres y Storage privado para sesiones anónimas, perfiles, recuerdos, misiones, inventario y NR Coins. El navegador contiene solo la publishable key; saldo, compras y recompensas se validan en funciones SQL con permisos.
 
-## Requisitos
+## Desarrollo local
 
-- Node.js 18+
-- npm
+Requisitos: Node.js 20+ y npm.
 
-## Instalación
-
-```bash
+```sh
 npm install
-```
-
-## Desarrollo
-
-```bash
+cp .env.example .env
 npm run dev
 ```
 
-La app estará disponible en `http://localhost:3000`.
+Abre la dirección que muestra Vite (con esta configuración: `http://localhost:3000/viajemelgar/`); no abras `index.html` directamente ni uses un servidor estático, porque la app necesita que Vite lea `.env`.
 
-En escritorio, la navegación usa una barra lateral de cristal con cuatro vistas independientes: Álbum, Galería, Tienda y Sobre nosotros. En celular, esas vistas pasan a un panel inferior compacto y el botón `+` central abre el selector para subir fotos o videos.
+Completa `.env` con `VITE_SUPABASE_URL` y `VITE_SUPABASE_PUBLISHABLE_KEY`. No pongas nunca una secret/service-role key en variables `VITE_`.
 
-## Producción
+## Configurar Supabase
 
-```bash
+En un proyecto nuevo, sigue este orden desde **SQL Editor**:
+
+1. Ejecuta `supabase/nexora_setup.sql` una sola vez.
+2. Crea el bucket `nexora-photos` en **Storage** con **Public** desactivado.
+3. Si ya habías ejecutado `20261116_nexora_public_album.sql`, déjalo como está y ejecuta después `supabase/migrations/20261120_nexora_private_social.sql`; esta última vuelve a cerrar el acceso público. Si nunca ejecutaste la migración pública, ejecuta igualmente la migración privada después de `nexora_setup.sql`.
+4. Ejecuta `supabase/migrations/20261121_nexora_anonymous_guests.sql`. En **Authentication → Sign In / Providers**, habilita **Allow anonymous sign-ins**. Sin esa opción, Supabase rechazará la creación automática de invitados.
+
+Cada visitante recibe una sesión anónima de Supabase y un UUID; el servidor crea su perfil `Invitado NNN` y su billetera en la misma transacción. El saldo inicial usa el valor predeterminado de `profiles.coin_balance` (0 NR). El token de sesión se conserva en el navegador para que las visitas siguientes recuperen el mismo usuario; el perfil, las fotos, la tienda y el saldo permanecen en Supabase y protegidos por RLS. El alcance es por navegador/dispositivo: el código de recuperación entre dispositivos todavía no está habilitado.
+
+Las cuentas de correo existentes no se convierten ni se borran, pero la interfaz ya no muestra login o registro tradicional. El contenido del bucket permanece privado; las fotos solo se muestran con enlaces temporales a sesiones autenticadas.
+
+## Funciones conectadas
+
+- Creación automática de sesión anónima, persistencia del invitado por navegador, edición de nombre, descripción, aura y avatar.
+- Álbum privado con subida desde archivo o cámara, aprobación de publicaciones, favoritos, reacciones, comentarios y paginación.
+- Tienda con vendedor ilustrado, seis marcos, saldo e inventario sincronizados.
+- Recompensa de 20 NR por cada 10 minutos acreditada por Supabase, no por el reloj del navegador.
+- Misiones, XP y ranking desde la base de datos.
+- Sincronización periódica para reflejar cambios de otros miembros.
+
+## GitHub Pages
+
+El proyecto debe publicarse desde la raíz con el workflow `.github/workflows/deploy.yml`, no desde la carpeta antigua `viaje/`. En el repositorio, añade las variables de Actions **VITE_SUPABASE_URL** y **VITE_SUPABASE_PUBLISHABLE_KEY** en **Settings → Secrets and variables → Actions → Variables**. Deben contener la URL del proyecto y su publishable (o anon pública) key. En **Settings → Pages → Build and deployment**, el origen debe ser **GitHub Actions**. Después de subir los cambios a `main`, comprueba que termine correctamente **Deploy NEXORA to GitHub Pages** y abre `https://nicocalderonsilva2010-arch.github.io/viajemelgar/`.
+
+Localmente, usa `.env`; Git lo excluye. Para compilar y previsualizar:
+
+```sh
 npm run build
 npm run preview
 ```
 
-## Variables de entorno
-
-Copia `.env.example` a `.env` y completa los valores del proyecto.
-
-```bash
-cp .env.example .env
-```
-
-Variables reservadas para futuras integraciones (el modo actual no requiere configurarlas):
-
-- `VITE_SUPABASE_URL`
-- `VITE_SUPABASE_PUBLISHABLE_KEY` (o `VITE_SUPABASE_ANON_KEY` si el proyecto usa la clave legacy)
-- `VITE_SUPABASE_ANON_KEY`
-- `VITE_APP_NAME`
-
-## Datos y cuentas
-
-Supabase todavía no está integrado. El álbum, las misiones y NEXORA COINS funcionan en modo local con `localStorage`; sus datos existen solo en este navegador, no son cuentas autenticadas y no se sincronizan con otros dispositivos. Los perfiles Persona 1–10 y `manchi` son datos iniciales de muestra. El propietario no recibe privilegios administrativos mientras no exista autenticación segura. No guardes datos sensibles en este modo.
-
-`.env.example` deja en blanco las variables futuras de Supabase; no contiene credenciales. `supabase/nexora_setup.sql` reúne el esquema inicial del market y las tablas RLS del álbum. Ejecútalo una sola vez y solo en un proyecto nuevo, después de revisar que no haya tablas de aplicación existentes. La app todavía requiere conectar su cliente para empezar a leer o escribir estos datos.
-
-### Qué falta para conectar Supabase
-
-1. Crea un proyecto en Supabase y copia su **Project URL** y su **publishable key** (o la clave pública `anon` en proyectos antiguos).
-2. Para desarrollo local, copia `.env.example` a `.env` y pega esos dos valores en `VITE_SUPABASE_URL` y `VITE_SUPABASE_PUBLISHABLE_KEY`.
-3. Para GitHub Pages, añade esos mismos valores como Actions Variables en `Settings → Secrets and variables → Actions`, y configura el workflow para exponerlos al build.
-4. En **SQL Editor → New query**, pega el contenido completo de `supabase/nexora_setup.sql` y ejecuta una sola vez en el proyecto nuevo. Después crea en **Storage** un bucket privado llamado `nexora-photos`; no marques Public. El SQL prepara políticas para ese bucket.
-5. No uses la `service_role` key ni una secret key en el navegador, en `.env` de Vite ni en GitHub Pages.
-
-Tener las variables no conecta por sí solo la app: aún hay que implementar autenticación, tablas y sincronización en el cliente. No compartas claves privadas; la publishable/anon key está diseñada para uso público y debe quedar protegida por políticas RLS.
-
-La pantalla de bienvenida muestra la identidad de NEXORA y una barra de progreso durante 10 segundos antes de entrar al álbum.
-
-El mercader se dibuja como SVG dentro de la página, no necesita descargas de imágenes ni archivos adicionales. El logo y la fotografía de perfil se sirven desde `public/images/`.
-
-## GitHub Pages
-
-Vite usa `base: '/viajemelgar/'` para este repositorio. El workflow `.github/workflows/deploy.yml` construye `dist` y lo publica cuando hay un push a `main`. En GitHub, configura **Settings → Pages → Build and deployment → Source: GitHub Actions**. La web no está confirmada como publicada hasta que la ejecución del workflow termine correctamente.
-
-La app actual es JavaScript y Vite, no React. Su navegación interna usa anchors `#...`, por lo que no requiere un fallback de rutas SPA.
-
-## Estructura
-
-```text
-/
-├─ index.html
-├─ src/
-│  ├─ main.js
-│  └─ styles.css
-├─ public/
-│  └─ images/
-│     ├─ logo-nexora/       # Logo oficial de Nexora
-│     ├─ nosotros/
-│     │  └─ foto/           # Foto para la sección Nosotros
-│     └─ team/
-│        └─ elmanxy.png
-├─ .env.example
-├─ .env
-├─ package.json
-├─ vite.config.js
-└─ README.md
-```
+Con `base` configurado para GitHub Pages, la vista previa local queda en `http://localhost:4173/viajemelgar/`. No se considera publicado hasta que el workflow de GitHub Pages finalice correctamente.

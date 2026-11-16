@@ -1,11 +1,7 @@
-# Retratos de El Mercader de Nexora
+# Imagen del vendedor
 
-Coloca aquí las imágenes propias del personaje. No se incluyen imágenes sustitutas.
+Esta carpeta es el lugar para la imagen real del vendedor de NEXORA Market.
 
-- `merchant.png` — retrato de respaldo.
-- `merchant-idle.png` — saludo y estado normal.
-- `merchant-happy.png` — compra completada.
-- `merchant-buy.png` — entrega del artículo.
-- `merchant-special.png` — artículo legendario.
+El retrato actual es `vendedor.png`; la tienda lo carga automáticamente y lo ajusta completo, sin recortarlo. Para cambiarlo, reemplaza ese archivo conservando el nombre. Se recomienda PNG transparente, cuadrado o vertical.
 
-Si falta un archivo, la tienda conserva el espacio de retrato de cristal.
+Si el archivo no se puede cargar, la tienda muestra una vitrina de marcos de NEXORA sin personaje. El NPC anterior fue retirado.
