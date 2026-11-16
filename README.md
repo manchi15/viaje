@@ -49,14 +49,15 @@ Variables reservadas para futuras integraciones (el modo actual no requiere conf
 
 Supabase todavía no está integrado. El álbum, las misiones y NEXORA COINS funcionan en modo local con `localStorage`; sus datos existen solo en este navegador, no son cuentas autenticadas y no se sincronizan con otros dispositivos. Los perfiles Persona 1–10 y `manchi` son datos iniciales de muestra. El propietario no recibe privilegios administrativos mientras no exista autenticación segura. No guardes datos sensibles en este modo.
 
-`.env.example` deja en blanco las variables futuras de Supabase; no contiene credenciales. No se necesitan para compilar o desplegar la web estática. `supabase/migrations/20261115_nexora_market.sql` es una propuesta para revisar cuando exista un proyecto; no se aplica ni se usa actualmente. Debe cotejarse con el esquema real antes de ejecutarla.
+`.env.example` deja en blanco las variables futuras de Supabase; no contiene credenciales. `supabase/nexora_setup.sql` reúne el esquema inicial del market y las tablas RLS del álbum. Ejecútalo una sola vez y solo en un proyecto nuevo, después de revisar que no haya tablas de aplicación existentes. La app todavía requiere conectar su cliente para empezar a leer o escribir estos datos.
 
 ### Qué falta para conectar Supabase
 
 1. Crea un proyecto en Supabase y copia su **Project URL** y su **publishable key** (o la clave pública `anon` en proyectos antiguos).
 2. Para desarrollo local, copia `.env.example` a `.env` y pega esos dos valores en `VITE_SUPABASE_URL` y `VITE_SUPABASE_PUBLISHABLE_KEY`.
 3. Para GitHub Pages, añade esos mismos valores como Actions Variables en `Settings → Secrets and variables → Actions`, y configura el workflow para exponerlos al build.
-4. Antes de ejecutar la migración SQL, hay que revisar sus tablas y políticas RLS con el esquema definitivo. No uses la `service_role` key en el navegador, en `.env` de Vite ni en GitHub Pages.
+4. En **SQL Editor → New query**, pega el contenido completo de `supabase/nexora_setup.sql` y ejecuta una sola vez en el proyecto nuevo. Después crea en **Storage** un bucket privado llamado `nexora-photos`; no marques Public. El SQL prepara políticas para ese bucket.
+5. No uses la `service_role` key ni una secret key en el navegador, en `.env` de Vite ni en GitHub Pages.
 
 Tener las variables no conecta por sí solo la app: aún hay que implementar autenticación, tablas y sincronización en el cliente. No compartas claves privadas; la publishable/anon key está diseñada para uso público y debe quedar protegida por políticas RLS.
 
