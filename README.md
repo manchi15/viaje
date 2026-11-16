@@ -1,6 +1,6 @@
 # NEXORA ESTUDIO & SAUSALITOZ Z9
 
-Álbum digital privado para documentar el viaje a Melgar, Colombia.
+Álbum digital para documentar el viaje a Melgar, Colombia.
 
 ## Requisitos
 
@@ -20,6 +20,8 @@ npm run dev
 ```
 
 La app estará disponible en `http://localhost:3000`.
+
+En escritorio, la navegación usa una barra lateral de cristal con cuatro vistas independientes: Álbum, Galería, Tienda y Sobre nosotros. En celular, esas vistas pasan a un panel inferior compacto y el botón `+` central abre el selector para subir fotos o videos.
 
 ## Producción
 
@@ -41,18 +43,26 @@ Variables reservadas para futuras integraciones (el modo actual no requiere conf
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_PUBLISHABLE_KEY` (o `VITE_SUPABASE_ANON_KEY` si el proyecto usa la clave legacy)
 - `VITE_SUPABASE_ANON_KEY`
-- `VITE_PRIVATE_ACCESS_CODE`
 - `VITE_APP_NAME`
 
 ## Datos y cuentas
 
-Supabase todavía no está configurado. El álbum, las misiones y NEXORA COINS funcionan en modo local con `localStorage`; sus datos existen solo en este navegador, no son cuentas autenticadas y no se sincronizan con otros dispositivos. Los perfiles Persona 1–10 y `manchi` son datos iniciales de muestra. El propietario no recibe privilegios administrativos mientras no exista autenticación segura. No guardes datos sensibles en este modo.
+Supabase todavía no está integrado. El álbum, las misiones y NEXORA COINS funcionan en modo local con `localStorage`; sus datos existen solo en este navegador, no son cuentas autenticadas y no se sincronizan con otros dispositivos. Los perfiles Persona 1–10 y `manchi` son datos iniciales de muestra. El propietario no recibe privilegios administrativos mientras no exista autenticación segura. No guardes datos sensibles en este modo.
 
 `.env.example` deja en blanco las variables futuras de Supabase; no contiene credenciales. No se necesitan para compilar o desplegar la web estática. `supabase/migrations/20261115_nexora_market.sql` es una propuesta para revisar cuando exista un proyecto; no se aplica ni se usa actualmente. Debe cotejarse con el esquema real antes de ejecutarla.
 
-El código de acceso del álbum es una pantalla de conveniencia del lado del navegador, no una medida de privacidad: el sitio se publica como contenido estático y cualquier visitante puede inspeccionar el código cliente. No uses este modo para datos privados.
+### Qué falta para conectar Supabase
 
-Las imágenes del mercader son opcionales. Coloca tus propios archivos en `public/images/merchant/`; si faltan, se muestra el espacio de retrato de cristal de NEXORA.
+1. Crea un proyecto en Supabase y copia su **Project URL** y su **publishable key** (o la clave pública `anon` en proyectos antiguos).
+2. Para desarrollo local, copia `.env.example` a `.env` y pega esos dos valores en `VITE_SUPABASE_URL` y `VITE_SUPABASE_PUBLISHABLE_KEY`.
+3. Para GitHub Pages, añade esos mismos valores como Actions Variables en `Settings → Secrets and variables → Actions`, y configura el workflow para exponerlos al build.
+4. Antes de ejecutar la migración SQL, hay que revisar sus tablas y políticas RLS con el esquema definitivo. No uses la `service_role` key en el navegador, en `.env` de Vite ni en GitHub Pages.
+
+Tener las variables no conecta por sí solo la app: aún hay que implementar autenticación, tablas y sincronización en el cliente. No compartas claves privadas; la publishable/anon key está diseñada para uso público y debe quedar protegida por políticas RLS.
+
+La pantalla de bienvenida muestra la identidad de NEXORA y una barra de progreso durante 10 segundos antes de entrar al álbum.
+
+El mercader se dibuja como SVG dentro de la página, no necesita descargas de imágenes ni archivos adicionales. El logo y la fotografía de perfil se sirven desde `public/images/`.
 
 ## GitHub Pages
 

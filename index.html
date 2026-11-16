@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="NEXORA ESTUDIO & SAUSALITOZ Z9 — Álbum privado del viaje a Melgar, Colombia." />
+    <meta name="description" content="NEXORA ESTUDIO & SAUSALITOZ Z9 — Álbum digital del viaje a Melgar, Colombia." />
     <title>NEXORA ESTUDIO & SAUSALITOZ Z9</title>
     <link rel="stylesheet" href="./src/styles.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -11,97 +11,65 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
   </head>
   <body>
-    <div id="accessModal" class="access-modal">
-      <div class="access-modal__card">
-        <h2>NEXORA</h2>
-        <p>Este álbum es privado. Ingresa el código del viaje para entrar a la experiencia de Melgar.</p>
-        <form id="accessForm" class="access-form">
-          <input id="accessInput" class="form-input" type="password" placeholder="Código privado" aria-label="Código privado" />
-          <button class="button" type="submit">Entrar al álbum</button>
-        </form>
+    <div id="loadingScreen" class="loading-screen" role="status" aria-live="polite">
+      <div class="loading-screen__content">
+        <div class="loading-screen__mark"><img src="./images/logo-nexora/logo.jpg" alt="" onerror="this.onerror=null;this.src='./public/images/logo-nexora/logo.jpg'" /></div>
+        <p class="eyebrow">NEXORA ESTUDIO</p>
+        <h1>NEXORA</h1>
+        <p class="loading-screen__subtitle">Preparando tu experiencia</p>
+        <div class="loading-progress" role="progressbar" aria-label="Cargando NEXORA" aria-valuemin="0" aria-valuemax="100">
+          <span></span>
+        </div>
+        <small class="loading-screen__caption">MELGAR · 2026</small>
       </div>
     </div>
 
-    <div id="siteShell" class="site-shell hidden">
+    <div id="siteShell" class="site-shell site-shell--delayed">
       <header class="topbar">
         <div class="topbar__inner">
           <div class="brand">
-            <div class="brand__mark">N</div>
+            <div class="brand__mark"><img src="./images/logo-nexora/logo.jpg" alt="" onerror="this.onerror=null;this.src='./public/images/logo-nexora/logo.jpg'" /></div>
             <div class="brand__meta">
-              <p class="eyebrow">Álbum privado</p>
+              <p class="eyebrow">Experiencia digital</p>
               <h2>NEXORA</h2>
             </div>
           </div>
 
-          <nav class="nav" aria-label="Navegación principal">
-            <a href="#inicio">Inicio</a>
-            <a href="#galeria">Galería</a>
-            <a href="#momentos">Momentos</a>
-            <a href="#participantes">Participantes</a>
-            <a href="#nexora-points">NEXORA Points</a>
-            <a href="#nexora-market">NEXORA Market</a>
-            <a href="#nexora-store">NEXORA Store</a>
-            <a href="#leaderboard">Ranking</a>
-            <a href="#momentos">Actividades</a>
-            <a href="#nosotros">Nosotros</a>
+          <nav class="nav app-navigation" aria-label="Navegación principal">
+            <a href="#inicio"><span>01</span>Inicio</a>
+            <a href="#galeria"><span>02</span>Fotos</a>
+            <a href="#momentos"><span>03</span>Actividades</a>
+            <a href="#participantes"><span>04</span>Participantes</a>
+            <a href="#nexora-market"><span>05</span>Market</a>
+            <a href="#misiones"><span>06</span>Misiones</a>
+            <a href="#perfil"><span>07</span>Mi perfil</a>
+            <a class="nav-locked" href="#administracion" title="Acceso de propietario pendiente de autenticación"><span>08</span>Admin <small>Próximamente</small></a>
+            <details class="nav-more">
+              <summary>Más <span aria-hidden="true">⌄</span></summary>
+              <div class="nav-more__menu">
+                <a href="#leaderboard">Ranking</a><a href="#nexora-store">NEXORA Store</a><a href="#timeline">Línea de tiempo</a><a href="#mensajes">Mensajes</a><a href="#donaciones">Donaciones</a><a href="#nosotros">Sobre nosotros</a><a href="#administracion">Administración · próximamente</a>
+              </div>
+            </details>
           </nav>
 
           <div class="topbar__tools">
-            <div class="coin-wallet" id="coinWallet" aria-live="polite"><span class="coin-icon" aria-hidden="true">N</span><span><small>NEXORA COINS</small><strong id="coinBalance">— NC</strong></span></div>
-            <button class="topbar__action" type="button" data-scroll="galeria">Ver álbum</button>
+            <div class="coin-wallet" id="coinWallet" aria-live="polite"><span class="coin-icon" aria-hidden="true">N</span><span><small>NEXORA COINS</small><strong id="coinBalance">— NC</strong><small id="rewardCountdown">Recompensa: 10:00</small></span></div>
+            <button class="topbar__action" type="button" data-scroll="galeria">Subir foto</button>
           </div>
         </div>
       </header>
 
       <main class="page-shell">
         <section id="inicio" class="hero">
-          <div class="hero__layout">
-            <div class="hero__content">
-              <p class="eyebrow">NEXORA ESTUDIO & SAUSALITOZ Z9</p>
-              <h1 id="tripTitle">MELGAR</h1>
-              <p id="tripTagline" class="hero__tagline">Un viaje, una historia y recuerdos que permanecerán.</p>
-
-              <div class="hero__meta">
-                <div class="meta-item">
-                  <span>Ubicación</span>
-                  <strong id="tripLocation">Club de la Policía, Melgar, Colombia</strong>
-                </div>
-                <div class="meta-item">
-                  <span>Fecha</span>
-                  <strong id="tripDate">20 de noviembre de 2026</strong>
-                </div>
-              </div>
-
-              <div class="trip-counter panel" aria-live="polite">
-                <p class="eyebrow" id="counterEyebrow">CUENTA REGRESIVA</p>
-                <h2 id="counterTitle">EL VIAJE COMIENZA EN...</h2>
-                <div class="counter-units" id="tripCounter"></div>
-                <p class="counter-note" id="counterNote">Hora oficial de Colombia · America/Bogota</p>
-              </div>
-
-              <div class="hero__actions">
-                <button class="button" type="button" data-scroll="galeria">Entrar al álbum</button>
-                <button class="button-ghost" type="button" data-scroll="donaciones">Apoya el proyecto</button>
-              </div>
-            </div>
-
-            <div class="hero__visual" aria-label="Viaje a Melgar, 20 de noviembre de 2026">
-              <div class="hero__art">
-                <p class="eyebrow">NEXORA ESTUDIO</p>
-                <strong>20</strong>
-                <span>NOVIEMBRE<br />2026</span>
-                <div class="hero__art-line"></div>
-                <p>Melgar, Colombia</p>
-              </div>
-              <div class="hero__overlay">
-                <strong>Viaje a Melgar</strong>
-                <b>Amigos, memoria y lugar.</b>
-              </div>
-            </div>
+          <div class="home-heading"><div><p class="eyebrow">NEXORA ESTUDIO & SAUSALITOZ Z9 <span>·</span> 20 NOVIEMBRE 2026</p><h1 id="tripTitle">MELGAR</h1><p id="tripTagline">Un viaje, una historia y recuerdos que permanecerán.</p></div><button class="button" type="button" data-scroll="galeria">Compartir un recuerdo <span aria-hidden="true">↗</span></button></div>
+          <div class="home-editorial-grid">
+            <article class="home-photo-feature" id="homePhotoFeature"><img id="homeFeatureImage" alt="Último recuerdo compartido del viaje" /><div class="home-photo-empty" id="homePhotoEmpty"><span>01 / FOTOS DEL VIAJE</span><strong>Los recuerdos<br />empiezan aquí.</strong><small>Comparte la primera foto de Melgar.</small><button class="text-link" type="button" data-scroll="galeria">Ir a Fotos <span aria-hidden="true">↗</span></button></div><div class="home-photo-caption" id="homePhotoCaption"></div></article>
+            <aside class="home-trip-details"><div class="home-trip-details__top"><span class="eyebrow">EL VIAJE</span><span class="home-live-dot"></span></div><div><small>DESTINO</small><strong id="tripLocation">Club de la Policía, Melgar, Colombia</strong></div><div><small>FECHA</small><strong id="tripDate">20 de noviembre de 2026</strong></div><div class="home-countdown"><span class="eyebrow" id="counterEyebrow">CUENTA REGRESIVA</span><h2 id="counterTitle">EL VIAJE COMIENZA EN...</h2><div class="counter-units" id="tripCounter"><div class="counter-unit"><strong>00</strong><span>DÍAS</span></div><div class="counter-unit"><strong>00</strong><span>HORAS</span></div><div class="counter-unit"><strong>00</strong><span>MIN</span></div><div class="counter-unit"><strong>00</strong><span>SEG</span></div></div><p class="counter-note" id="counterNote">Hora de Colombia · America/Bogota</p></div></aside>
           </div>
+          <div class="home-summary"><div><strong id="homeMemoryCount">0</strong><span>FOTOS COMPARTIDAS</span></div><div><strong id="homeParticipantCount">0</strong><span>PARTICIPANTES</span></div><div><span class="local-status-dot"></span><span>ÁLBUM EN ESTE DISPOSITIVO · SUPABASE PENDIENTE</span></div></div>
         </section>
 
-        <section class="section" id="participantes">
+        <section class="section" id="participantes" hidden>
           <div class="section__header">
             <div>
               <p class="eyebrow">Participantes</p>
@@ -120,7 +88,7 @@
           </div>
         </section>
 
-        <section class="section" id="galeria">
+        <section class="section" id="galeria" hidden>
           <div class="section__header">
             <div>
               <p class="eyebrow">Galería</p>
@@ -149,33 +117,44 @@
               <button class="button" type="submit">Publicar recuerdos</button>
             </form>
 
+            <div class="gallery-toolbar"><span id="galleryResultCount">0 recuerdos</span><div class="gallery-filters" aria-label="Filtrar galería"><button type="button" class="is-active" data-gallery-filter="all">Todo</button><button type="button" data-gallery-filter="image">Fotos</button><button type="button" data-gallery-filter="video">Videos</button><select id="galleryParticipantFilter" class="form-input" aria-label="Filtrar por participante"><option value="all">Todos</option></select><input id="galleryTagFilter" class="form-input" type="search" placeholder="#Melgar" aria-label="Filtrar por hashtag" /></div></div>
             <div id="galleryGrid" class="gallery-grid" style="margin-top: 20px;"></div>
           </div>
         </section>
 
-        <section class="section" id="nexora-points">
-          <div class="section__header"><div><p class="eyebrow">NEXORA POINTS</p><h2>Tu historia también suma</h2></div></div>
+        <section class="section" id="misiones" hidden>
+          <div class="section__header"><div><p class="eyebrow">NEXORA POINTS</p><h2>Misiones de viaje</h2><p class="muted-copy">Retos, progreso y recompensas del álbum.</p></div></div>
           <div class="panel game-panel">
-            <div class="game-toolbar"><label for="activeParticipant">Perfil participante</label><select id="activeParticipant" class="form-input"></select><span class="local-mode">Modo local · solo este navegador</span></div>
-            <form id="tripSettingsForm" class="trip-settings"><label for="tripEndAt">Fin del viaje · hora de Colombia</label><input id="tripEndAt" class="form-input" type="datetime-local" /><button class="button-ghost" type="submit">Guardar fecha de cierre</button><small>La fecha queda vacía hasta que el administrador la configure.</small></form>
-            <div id="playerProfile" class="profile-card"></div>
-            <div class="game-columns">
-              <div><h3>NEXORA QUESTS</h3><p class="muted-copy">Cada día trae una nueva aventura.</p><div id="questList" class="quest-list"></div></div>
-              <div><h3>Actividad reciente</h3><div id="pointHistory" class="history-list"></div></div>
-            </div>
+            <div class="game-toolbar"><label for="activeParticipant">Ver misiones de</label><select id="activeParticipant" class="form-input"></select><span class="local-mode">Modo local · solo este navegador</span></div>
+            <div id="questList" class="quest-list"></div>
           </div>
         </section>
 
-        <section class="section" id="nexora-market">
+        <section class="section" id="perfil" hidden>
+          <div class="section__header"><div><p class="eyebrow">MI ESPACIO</p><h2>Perfil del participante</h2><p class="muted-copy">Progreso guardado en este navegador.</p></div></div>
+          <div class="panel game-panel"><div class="game-toolbar"><label for="profileParticipant">Participante</label><select id="profileParticipant" class="form-input"></select></div><div id="playerProfile" class="profile-card"></div><div class="game-columns"><div><h3>Actividad reciente</h3><div id="pointHistory" class="history-list"></div></div><div><h3>Privacidad de datos</h3><p class="muted-copy">El perfil y el progreso todavía no se sincronizan entre dispositivos. La conexión a Supabase está pendiente.</p></div></div></div>
+        </section>
+
+        <section class="section" id="administracion" hidden>
+          <div class="section__header"><div><p class="eyebrow">NEXORA · CONTROL</p><h2>Administración</h2></div></div>
+          <div class="panel"><p class="muted-copy">Los permisos de propietario necesitan autenticación segura. Esta fecha de cierre es un ajuste visual local y solo cambia el contador en este navegador.</p><form id="tripSettingsForm" class="trip-settings"><label for="tripEndAt">Fin del viaje · hora de Colombia</label><input id="tripEndAt" class="form-input" type="datetime-local" /><button class="button-ghost" type="submit">Guardar fecha local</button><small>Los controles protegidos se habilitarán al conectar un backend y verificar la cuenta propietaria.</small></form></div>
+        </section>
+
+        <section class="section" id="nexora-market" hidden>
           <div class="section__header"><div><p class="eyebrow">NEXORA MARKET</p><h2>Una pieza para tu historia</h2><p class="muted-copy">Objetos únicos. Recuerdos hechos a tu medida.</p></div></div>
           <div class="market-layout">
             <aside class="merchant-card" id="merchantCard">
               <div class="merchant-portrait" id="merchantPortrait">
-                <img id="merchantImage" alt="El Mercader de Nexora" />
-                <div class="merchant-placeholder" id="merchantPlaceholder"><span class="merchant-monogram">N</span><small>SU RETRATO, MUY PRONTO</small></div>
+                <img class="merchant-portrait__image" id="merchantImage" src="./images/merchant/vendedor.png" alt="Vendedor de NEXORA Market" decoding="async" onerror="this.onerror=null;this.src='./public/images/merchant/vendedor.png'" />
+                <div class="merchant-showcase" id="merchantShowcase" aria-label="Vitrina de NEXORA Market">
+                  <span class="merchant-showcase__halo" aria-hidden="true"></span>
+                  <span class="merchant-showcase__art" aria-hidden="true"><i></i><i></i><i></i></span>
+                  <span class="merchant-showcase__title">NEXORA MARKET</span>
+                  <span class="merchant-showcase__subtitle">MARCOS · RECUERDOS · COLECCIÓN</span>
+                </div>
               </div>
-              <p class="eyebrow">GUARDIÁN DE PIEZAS EXTRAORDINARIAS</p>
-              <h3>EL MERCADER<br />DE NEXORA</h3>
+              <p class="eyebrow merchant-kicker"><span></span> ASESOR DE NEXORA MARKET</p>
+              <h3>EL VENDEDOR<br />DE NEXORA</h3>
               <div class="merchant-dialogue" id="merchantDialogue" aria-live="polite">«Vaya, vaya... tenemos un nuevo visitante»</div>
               <div class="market-local-profile"><label for="marketAccount">Perfil de muestra · no es una cuenta autenticada</label><select id="marketAccount" class="form-input"></select><p class="market-status" id="marketStatus" role="status">Saldos y compras locales, no sincronizados ni protegidos frente a cambios del navegador.</p></div>
             </aside>
@@ -189,17 +168,17 @@
           </div>
         </section>
 
-        <section class="section" id="leaderboard">
+        <section class="section" id="leaderboard" hidden>
           <div class="section__header"><div><p class="eyebrow">NEXORA RANKS</p><h2>Los más activos de Melgar</h2></div></div>
           <div class="panel"><div id="leaderboardList" class="leaderboard-list"></div></div>
         </section>
 
-        <section class="section" id="nexora-store">
+        <section class="section" id="nexora-store" hidden>
           <div class="section__header"><div><p class="eyebrow">NEXORA POINTS</p><h2>NEXORA STORE</h2><p class="muted-copy">Canjea tus puntos del viaje por marcos para tus fotografías.</p></div></div>
           <div class="panel"><div id="storeGrid" class="store-grid"></div></div>
         </section>
 
-        <section class="section" id="momentos">
+        <section class="section" id="momentos" hidden>
           <div class="section__header">
             <div>
               <p class="eyebrow">Momentos</p>
@@ -212,7 +191,7 @@
           </div>
         </section>
 
-        <section class="section" id="timeline">
+        <section class="section" id="timeline" hidden>
           <div class="section__header">
             <div>
               <p class="eyebrow">Línea de tiempo</p>
@@ -225,7 +204,7 @@
           </div>
         </section>
 
-        <section class="section" id="mensajes">
+        <section class="section" id="mensajes" hidden>
           <div class="section__header">
             <div>
               <p class="eyebrow">Mensajes</p>
@@ -243,7 +222,7 @@
           </div>
         </section>
 
-        <section class="section" id="nosotros">
+        <section class="section" id="nosotros" hidden>
           <div class="section__header">
             <div>
               <p class="eyebrow">Nosotros</p>
@@ -254,7 +233,7 @@
           <div class="about-layout">
             <div class="about-card">
               <div class="about-card__profile">
-                <img src="%BASE_URL%images/team/elmanxy.png" alt="Nicolás — ElManxy" loading="lazy" decoding="async" />
+                <img src="./images/nosotros/foto/foto.jpg" alt="Nicolás — ElManxy" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='./public/images/nosotros/foto/foto.jpg'" />
               </div>
             </div>
 
@@ -270,7 +249,7 @@
           </div>
         </section>
 
-        <section class="section" id="donaciones">
+        <section class="section" id="donaciones" hidden>
           <div class="donations">
             <div class="donations__layout">
               <div class="donation-hero">
@@ -325,10 +304,20 @@
         <p>ElManxy · Nicolás</p>
         <p>NEXORA ESTUDIO & SAUSALITOZ Z9</p>
       </footer>
+
+      <nav class="mobile-tabbar app-navigation" aria-label="Navegación móvil">
+        <a href="#inicio" aria-label="Álbum"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/></svg></a>
+        <a href="#galeria" aria-label="Fotos"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9" r="1.5"/><path d="m21 15-5-5L5 20"/></svg></a>
+        <button id="mobileUploadButton" class="mobile-upload-button" type="button" aria-label="Subir una foto o video"><span aria-hidden="true">+</span></button>
+        <a href="#nexora-market" aria-label="Tienda"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l1 13H4L5 8Z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg></a>
+        <a href="#perfil" aria-label="Mi perfil"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></a>
+        <details class="mobile-more"><summary aria-label="Más secciones">···</summary><div class="mobile-more__menu"><a href="#momentos">Actividades</a><a href="#participantes">Participantes</a><a href="#misiones">Misiones</a><a href="#leaderboard">Ranking</a><a href="#nexora-store">NEXORA Store</a><a href="#timeline">Línea de tiempo</a><a href="#mensajes">Mensajes</a><a href="#donaciones">Donaciones</a><a href="#nosotros">Sobre nosotros</a><a href="#administracion">Administración</a></div></details>
+      </nav>
     </div>
 
     <div id="viewerModal" class="viewer-modal hidden">
-      <div class="viewer-modal__content">
+      <div class="viewer-modal__content" role="dialog" aria-modal="true" aria-label="Visor de recuerdo">
+        <button class="viewer-modal__close" type="button" data-close-modal aria-label="Cerrar recuerdo">×</button>
         <div id="viewerContent"></div>
       </div>
     </div>
