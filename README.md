@@ -1,52 +1,31 @@
-# NEXORA · álbum privado de Melgar
+# NEXORA · Melgar 2026
 
-Aplicación web para los integrantes del viaje. Usa Vite en el frontend y Supabase Auth, Postgres y Storage privado para sesiones anónimas, perfiles, recuerdos, misiones, inventario y NR Coins. El navegador contiene solo la publishable key; saldo, compras y recompensas se validan en funciones SQL con permisos.
+Aplicación privada para compartir fotos durante un viaje entre amigos.
+
+## Fase actual
+
+La interfaz ofrece Inicio, Fotos, Subir, Tienda, Coleccionables, Juegos, Perfil y Sobre mí, con diseño adaptable a teléfonos desde 320 px de ancho. Las entradas de secciones y tarjetas tienen animaciones escalonadas que respetan la preferencia de movimiento reducido. La tienda y las compras de marcos usan Supabase; cada integrante recibe 10 NexaCoins por cada intervalo de 10 minutos. Los seis marcos VFX usan los diseños aportados, con efectos animados. Coleccionables muestra las figuritas de la cuenta. Juegos permite escribir un título personalizado y sincroniza el título, los participantes y el resultado de la ruleta entre los celulares del grupo. Perfil permite cambiar el nombre visible y subir o reemplazar la foto usando el almacenamiento privado de Supabase; el nombre no concede permisos. Las fotografías se publican en el álbum privado y el servidor verifica que el marco seleccionado pertenezca a la cuenta. Fotos muestra un ranking privado por cantidad de imágenes aprobadas; Sobre mí presenta al creador e informa sobre aportes voluntarios en efectivo (sin procesarlos ni registrarlos).
+
+La versión anterior se conserva en `legacy.html`. Las carpetas de fotos y los archivos SQL existentes no se borraron.
 
 ## Desarrollo local
 
-Requisitos: Node.js 20+ y npm.
+Requisitos: Node.js 20+ (incluye npm).
 
-```sh
+```powershell
+if (-not (Test-Path .env)) { Copy-Item .env.example .env }
 npm install
-cp .env.example .env
 npm run dev
 ```
 
-Abre la dirección que muestra Vite (con esta configuración: `http://localhost:3000/viaje/`); no abras `index.html` directamente ni uses un servidor estático, porque la app necesita que Vite lea `.env`.
+Abre `http://localhost:3000/viaje/`; no abras `index.html` directamente. Completa `.env` con `VITE_SUPABASE_URL` y `VITE_SUPABASE_PUBLISHABLE_KEY`. Nunca uses una clave `service_role` en el navegador.
 
-Completa `.env` con `VITE_SUPABASE_URL` y `VITE_SUPABASE_PUBLISHABLE_KEY`. No pongas nunca una secret/service-role key en variables `VITE_`.
+## Supabase
 
-## Configurar Supabase
+No borres tablas ni datos para limpiar el SQL Editor: borrar una consulta guardada solo limpia el editor, pero no cambia la base de datos. En un proyecto Supabase nuevo, ejecuta una vez `supabase/nexora_setup.sql` y crea en Storage el bucket privado `nexora-photos`. Después aplica, en este orden, `20261116_nexora_public_album.sql`, `20261120_nexora_private_social.sql`, `20261121_nexora_anonymous_guests.sql`, `20261122_nexora_nexacoins.sql`, `20261123_nexora_collectibles.sql`, `20261124_nexora_delete_own_photos.sql`, `20261125_nexora_shared_roulette.sql` y `20261126_nexora_repair_participant_profiles.sql`. La migración privada de 20261120 debe ejecutarse inmediatamente después de la de álbum público de 20261116 para dejar el acceso del álbum privado. El archivo inicial ya incluye el esquema de mercado, así que no ejecutes además `20261115_nexora_market.sql` ni su copia `20261115_nexora_market copy.sql`. En un proyecto existente, no vuelvas a ejecutar `nexora_setup.sql`: aplica únicamente migraciones que falten. La migración de 20261126 repara fichas de participante ausentes y permite que cada cuenta autenticada recupere solo su propia ficha. El ranking no requiere una migración nueva; la app cuenta fotos aprobadas y solo muestra nombres y cantidades, nunca las imágenes privadas. La migración de 20261125 sincroniza el título personalizado, participantes y resultado de la ruleta entre celulares; después de aplicar una migración, recarga la página.
 
-En un proyecto nuevo, sigue este orden desde **SQL Editor**:
-
-1. Ejecuta `supabase/nexora_setup.sql` una sola vez.
-2. Crea el bucket `nexora-photos` en **Storage** con **Public** desactivado.
-3. Si ya habías ejecutado `20261116_nexora_public_album.sql`, déjalo como está y ejecuta después `supabase/migrations/20261120_nexora_private_social.sql`; esta última vuelve a cerrar el acceso público. Si nunca ejecutaste la migración pública, ejecuta igualmente la migración privada después de `nexora_setup.sql`.
-4. Ejecuta `supabase/migrations/20261121_nexora_anonymous_guests.sql`. En **Authentication → Sign In / Providers**, habilita **Allow anonymous sign-ins**. Sin esa opción, Supabase rechazará la creación automática de invitados.
-
-Cada visitante recibe una sesión anónima de Supabase y un UUID; el servidor crea su perfil `Invitado NNN` y su billetera en la misma transacción. El saldo inicial usa el valor predeterminado de `profiles.coin_balance` (0 NR). El token de sesión se conserva en el navegador para que las visitas siguientes recuperen el mismo usuario; el perfil, las fotos, la tienda y el saldo permanecen en Supabase y protegidos por RLS. El alcance es por navegador/dispositivo: el código de recuperación entre dispositivos todavía no está habilitado.
-
-Las cuentas de correo existentes no se convierten ni se borran, pero la interfaz ya no muestra login o registro tradicional. El contenido del bucket permanece privado; las fotos solo se muestran con enlaces temporales a sesiones autenticadas.
-
-## Funciones conectadas
-
-- Creación automática de sesión anónima, persistencia del invitado por navegador, edición de nombre, descripción, aura y avatar.
-- Álbum privado con subida desde archivo o cámara, aprobación de publicaciones, favoritos, reacciones, comentarios y paginación.
-- Tienda con vendedor ilustrado, seis marcos, saldo e inventario sincronizados.
-- Recompensa de 20 NR por cada 10 minutos acreditada por Supabase, no por el reloj del navegador.
-- Misiones, XP y ranking desde la base de datos.
-- Sincronización periódica para reflejar cambios de otros miembros.
+Las 16 ilustraciones iniciales están en `public/images/collectibles/` como `figurita-01.jpg` a `figurita-16.jpg`. La tienda las carga automáticamente en sus respectivas tarjetas.
 
 ## GitHub Pages
 
-El proyecto debe publicarse desde la raíz con el workflow `.github/workflows/deploy.yml`. En el repositorio `manchi15/viaje`, añade las variables de Actions **VITE_SUPABASE_URL** y **VITE_SUPABASE_PUBLISHABLE_KEY** en **Settings → Secrets and variables → Actions → Variables**. Deben contener la URL del proyecto y su publishable (o anon pública) key. En **Settings → Pages → Build and deployment**, el origen debe ser **GitHub Actions**. Después de subir los cambios a `main`, comprueba que termine correctamente **Deploy NEXORA to GitHub Pages** y abre `https://manchi15.github.io/viaje/`.
-
-Localmente, usa `.env`; Git lo excluye. Para compilar y previsualizar:
-
-```sh
-npm run build
-npm run preview
-```
-
-Con `base` configurado para GitHub Pages, la vista previa local queda en `http://localhost:4173/viaje/`. No se considera publicado hasta que el workflow de GitHub Pages finalice correctamente.
+El despliegue usa `.github/workflows/deploy.yml`. GitHub Pages debe tener **GitHub Actions** como origen y las variables `VITE_SUPABASE_URL` y `VITE_SUPABASE_PUBLISHABLE_KEY` configuradas en **Settings → Secrets and variables → Actions → Variables**.

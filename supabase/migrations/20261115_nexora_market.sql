@@ -45,6 +45,7 @@ begin
     where p.schemaname = 'public'
       and p.tablename in ('profiles','coin_transactions','store_items','user_inventory','equipped_items')
       and p.cmd in ('INSERT','UPDATE','DELETE','ALL')
+      and not (p.tablename = 'store_items' and p.policyname = 'admins manage catalog')
   ) then
     raise exception 'Existing write policies found on Nexora Market tables. Review their permissions before applying; no changes applied.';
   end if;

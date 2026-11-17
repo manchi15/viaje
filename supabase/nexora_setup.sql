@@ -51,6 +51,7 @@ begin
     where p.schemaname = 'public'
       and p.tablename in ('profiles','coin_transactions','store_items','user_inventory','equipped_items')
       and p.cmd in ('INSERT','UPDATE','DELETE','ALL')
+      and not (p.tablename = 'store_items' and p.policyname = 'admins manage catalog')
   ) then
     raise exception 'Existing write policies found on Nexora Market tables. Review their permissions before applying; no changes applied.';
   end if;
@@ -500,6 +501,49 @@ create policy "nexora members read approved media" on storage.objects
       or exists (select 1 from public.trip_participants p where p.avatar_path = name)
     )
   );
+
+create or replace function public.nexora_ensure_participant()
+returns jsonb
+language plpgsql
+security definer
+set search_path = public, auth, pg_temp
+as $$
+declare
+  v_user uuid := auth.uid();
+  v_display_name text;
+  v_participant public.trip_participants%rowtype;
+begin
+  if v_user is null then
+    raise exception 'AUTH_REQUIRED' using errcode = '28000';
+  end if;
+
+  select coalesce(
+    nullif(trim(u.raw_user_meta_data ->> 'display_name'), ''),
+    nullif(split_part(coalesce(u.email, ''), '@', 1), ''),
+    'Invitado'
+  )
+  into v_display_name
+  from auth.users u
+  where u.id = v_user;
+
+  if not found then
+    raise exception 'AUTH_USER_NOT_FOUND' using errcode = 'P0002';
+  end if;
+
+  insert into public.trip_participants (user_id, display_name)
+  values (v_user, v_display_name)
+  on conflict (user_id) do nothing;
+
+  select * into v_participant
+  from public.trip_participants
+  where user_id = v_user;
+
+  return to_jsonb(v_participant);
+end;
+$$;
+
+revoke all on function public.nexora_ensure_participant() from public, anon, authenticated;
+grant execute on function public.nexora_ensure_participant() to authenticated;
 
 commit;
 
