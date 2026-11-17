@@ -1,0 +1,223 @@
+.vfx-frame {
+  --vfx-color: #b7a08f;
+  position: relative;
+  isolation: isolate;
+  display: block;
+  min-width: 0;
+  margin: 0;
+  padding: 25px;
+}
+.vfx-aura, .vfx-effects, .vfx-particles, .vfx-ornaments {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.vfx-aura {
+  z-index: 0;
+  inset: 10px;
+  border-radius: 22px;
+  background: radial-gradient(ellipse at center, var(--vfx-color), transparent 70%);
+  filter: blur(17px);
+  opacity: .48;
+  transform: scale(.96);
+  animation: vfx-aura 5s ease-in-out infinite;
+  animation-play-state: paused;
+}
+.vfx-photo {
+  position: relative;
+  z-index: 1;
+  display: block;
+  min-width: 0;
+  margin: 8%;
+  background: #171313;
+  box-shadow: 0 7px 22px rgba(22, 14, 14, .2);
+}
+.vfx-photo > img, .vfx-photo > video {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+.vfx-effects, .vfx-particles, .vfx-ornaments { z-index: 2; }
+.vfx-frame-artwork {
+  position: absolute;
+  z-index: 3;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  pointer-events: none;
+  opacity: .94;
+  filter: drop-shadow(0 0 5px var(--vfx-color));
+  animation: vfx-artwork-glow 4.8s ease-in-out infinite;
+  animation-play-state: paused;
+}
+.vfx-effects::before, .vfx-effects::after {
+  position: absolute;
+  inset: 4px;
+  border: 1px solid var(--vfx-color);
+  border-radius: 15px;
+  content: "";
+  opacity: .68;
+  box-shadow: 0 0 14px var(--vfx-color);
+  animation-play-state: paused;
+}
+.vfx-effects::after {
+  inset: 9px;
+  border-color: var(--vfx-color);
+  opacity: .34;
+}
+.vfx-particles i {
+  position: absolute;
+  display: block;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--vfx-color);
+  box-shadow: 0 0 8px 2px var(--vfx-color);
+  opacity: .8;
+  animation: vfx-drift 4.2s ease-in-out infinite;
+  animation-play-state: paused;
+}
+.vfx-particles i:nth-child(1) { top: 5px; left: 20%; animation-delay: -.6s; }
+.vfx-particles i:nth-child(2) { top: 5px; right: 22%; animation-delay: -2.2s; }
+.vfx-particles i:nth-child(3) { top: 39%; right: 5px; animation-delay: -1.1s; }
+.vfx-particles i:nth-child(4) { bottom: 5px; right: 18%; animation-delay: -3.1s; }
+.vfx-particles i:nth-child(5) { bottom: 5px; left: 24%; animation-delay: -1.8s; }
+.vfx-particles i:nth-child(6) { top: 62%; left: 5px; animation-delay: -.3s; }
+.vfx-ornaments::before, .vfx-ornaments::after {
+  position: absolute;
+  content: "";
+  pointer-events: none;
+}
+.vfx-placeholder {
+  display: grid;
+  width: 100%;
+  min-width: 0;
+  min-height: 190px;
+  aspect-ratio: 4 / 3;
+  align-content: center;
+  justify-items: center;
+  gap: 7px;
+  padding: 14px;
+  background:
+    radial-gradient(circle at 76% 28%, rgba(255,255,255,.62) 0 9%, transparent 10%),
+    linear-gradient(150deg, #eadbd0 0%, #c9a99a 57%, #74584f 58%, #402e2b 100%);
+  color: #fffaf5;
+  text-align: center;
+  text-shadow: 0 2px 14px rgba(35, 20, 18, .35);
+}
+.vfx-placeholder small, .vfx-placeholder > span { font-size: .53rem; letter-spacing: .2em; }
+.vfx-placeholder strong { font-family: Georgia, serif; font-size: clamp(1.35rem, 3.2vw, 2.3rem); font-weight: 400; }
+.vfx-frame--blood { --vfx-color: #d72c45; }
+.vfx-frame--blood .vfx-aura { background: radial-gradient(ellipse, #b80f2d 0%, #ec2844 28%, transparent 72%); animation-name: vfx-blood-aura; }
+.vfx-frame--blood .vfx-effects::before { border-width: 2px; box-shadow: 0 0 16px #ee263b, inset 0 0 11px #8f0d26; }
+.vfx-frame--blood .vfx-effects::before { animation: vfx-blood-energy 3.2s ease-in-out infinite; }
+.vfx-frame--blood .vfx-effects::after { border-style: dotted; opacity: .54; }
+.vfx-frame--blood .vfx-particles i { background: #ff5363; box-shadow: 0 0 7px 2px #f32641; animation-name: vfx-ember; }
+.vfx-frame--blood .vfx-particles i:nth-child(2n) { width: 3px; height: 3px; border-radius: 0; transform: rotate(45deg); }
+.vfx-frame--ocean { --vfx-color: #36b9df; }
+.vfx-frame--ocean .vfx-aura { background: radial-gradient(ellipse, #34a9e3 0%, #59e4dc 30%, transparent 73%); animation-name: vfx-ocean-aura; }
+.vfx-frame--ocean .vfx-effects::before { border-color: #7de8ef; box-shadow: 0 0 17px #28c6e7, inset 0 0 13px #1f8ac3; }
+.vfx-frame--ocean .vfx-effects::before { animation: vfx-wave 5s ease-in-out infinite; }
+.vfx-frame--ocean .vfx-particles i { width: 7px; height: 7px; border: 1px solid #bafaff; background: rgba(96, 220, 245, .22); box-shadow: 0 0 7px #65e9fa; animation-name: vfx-bubble; }
+.vfx-frame--ocean .vfx-particles i:nth-child(2n) { width: 4px; height: 4px; }
+.vfx-frame--ocean .vfx-ornaments::before, .vfx-frame--ocean .vfx-ornaments::after { inset: 5px 2px; border: 1px solid rgba(104, 230, 243, .5); border-radius: 48%; animation: vfx-wave 5s ease-in-out infinite; animation-play-state: paused; }
+.vfx-frame--ocean .vfx-ornaments::after { inset: 9px 5px; border-color: rgba(189, 255, 247, .34); animation-delay: -2.5s; }
+.vfx-frame--lightning { --vfx-color: #ae4fff; }
+.vfx-frame--lightning .vfx-aura { background: radial-gradient(ellipse, #b95cff 0%, #f7eaff 26%, #672cff 52%, transparent 74%); animation-name: vfx-electric-aura; }
+.vfx-frame--lightning .vfx-effects::before { border-color: #f0d7ff; box-shadow: 0 0 14px #d2a0ff, 0 0 28px #7f39ff; animation: vfx-electric-flash 3.6s steps(1,end) infinite; animation-play-state: paused; }
+.vfx-frame--lightning .vfx-particles i { width: 3px; height: 10px; border-radius: 0; background: #fff; box-shadow: 0 0 7px 2px #bd76ff; animation-name: vfx-spark; }
+.vfx-frame--lightning .vfx-ornaments::before, .vfx-frame--lightning .vfx-ornaments::after { top: 24%; left: 4px; width: 11px; height: 45px; background: linear-gradient(#fff, #aa5cff); clip-path: polygon(55% 0, 100% 0, 58% 42%, 95% 42%, 10% 100%, 35% 54%, 0 54%); filter: drop-shadow(0 0 5px #c289ff); animation: vfx-electric-flash 3.6s steps(1,end) infinite; animation-play-state: paused; }
+.vfx-frame--lightning .vfx-ornaments::after { top: auto; right: 4px; bottom: 17%; left: auto; animation-delay: -1.8s; transform: rotate(180deg); }
+.vfx-frame--angel { --vfx-color: #e7c98e; }
+.vfx-frame--angel .vfx-aura { background: radial-gradient(ellipse, #fff 0%, #fff4d5 30%, #d7b76b 55%, transparent 73%); animation-name: vfx-angel-aura; }
+.vfx-frame--angel .vfx-effects::before { border-color: #fff3d4; box-shadow: 0 0 19px #fff3d4, inset 0 0 9px #d6bd82; }
+.vfx-frame--angel .vfx-particles i { width: 3px; height: 3px; background: #fff8df; box-shadow: 0 0 8px 3px #f3d996; animation-name: vfx-glow-drift; }
+.vfx-frame--angel .vfx-ornaments::before, .vfx-frame--angel .vfx-ornaments::after { top: 50%; left: 2px; width: 20px; height: 66px; border-radius: 100% 0 100% 15%; background: repeating-linear-gradient(165deg, rgba(255,255,255,.9) 0 3px, rgba(222,198,143,.55) 4px 5px, transparent 6px 9px); filter: drop-shadow(0 0 6px #fff4d3); opacity: .56; transform: translateY(-50%) rotate(-12deg); animation: vfx-angel-wings 10s ease-in-out infinite; animation-play-state: paused; }
+.vfx-frame--angel .vfx-ornaments::after { right: 2px; left: auto; border-radius: 0 100% 15% 100%; transform: translateY(-50%) rotate(12deg); animation-delay: -5s; }
+.vfx-frame--venom { --vfx-color: #85d448; }
+.vfx-frame--venom .vfx-aura { background: radial-gradient(ellipse, #83dc38 0%, #3b9c3d 32%, #167a59 55%, transparent 74%); animation-name: vfx-venom-aura; }
+.vfx-frame--venom .vfx-effects::before { border-color: #b6ef67; box-shadow: 0 0 16px #6cce3c, inset 0 0 10px #2b8a45; }
+.vfx-frame--venom .vfx-effects::before { animation: vfx-venom-energy 4s ease-in-out infinite; }
+.vfx-frame--venom .vfx-particles i { width: 5px; height: 5px; background: #adf45c; box-shadow: 0 0 10px 3px #58c837; animation-name: vfx-spore; }
+.vfx-frame--venom .vfx-ornaments::before, .vfx-frame--venom .vfx-ornaments::after { top: 2px; left: 12%; width: 34px; height: 13px; border-radius: 50%; background: radial-gradient(ellipse, rgba(178,255,83,.65), transparent 72%); filter: blur(3px); animation: vfx-mist 5s ease-in-out infinite; animation-play-state: paused; }
+.vfx-frame--venom .vfx-ornaments::after { top: auto; right: 12%; bottom: 2px; left: auto; animation-delay: -2.5s; }
+.vfx-frame--mythic { --vfx-color: #e9d2a3; }
+.vfx-frame--mythic .vfx-aura { background: radial-gradient(ellipse, #fff5dd 0%, #e8d0a1 34%, #b68b58 55%, transparent 74%); animation-name: vfx-mythic-aura; }
+.vfx-frame--mythic .vfx-effects::before { inset: 2px; border: 1px solid transparent; background: linear-gradient(transparent, transparent) padding-box, linear-gradient(120deg,#fff8e6,#b99562,#fff4d6,#d4ad71) border-box; box-shadow: 0 0 18px rgba(231,205,158,.74); animation: vfx-mythic-ring 7s linear infinite; animation-play-state: paused; }
+.vfx-frame--mythic .vfx-effects::after { border-color: rgba(255,248,226,.8); box-shadow: inset 0 0 10px rgba(255,241,207,.35); }
+.vfx-frame--mythic .vfx-particles i { width: 3px; height: 3px; background: #fff5d8; box-shadow: 0 0 9px 3px #e6c47b; animation-name: vfx-glow-drift; }
+.vfx-frame--mythic .vfx-ornaments::before { inset: 5px 0; border-top: 1px solid rgba(255,248,224,.8); border-bottom: 1px solid rgba(233,203,150,.52); opacity: .5; animation: vfx-mythic-ring 7s linear infinite; animation-play-state: paused; }
+.vfx-frame--blood .vfx-placeholder { background: radial-gradient(circle at 75% 22%, #ff6370 0 7%, transparent 8%), linear-gradient(145deg,#551821,#9a2639 55%,#281314); }
+.vfx-frame--ocean .vfx-placeholder { background: radial-gradient(circle at 76% 25%,#d1ffff 0 8%,transparent 9%), linear-gradient(155deg,#224a62,#3589a0 57%,#143746); }
+.vfx-frame--lightning .vfx-placeholder { background: radial-gradient(circle at 76% 25%,#fff 0 7%,transparent 8%), linear-gradient(150deg,#291744,#7540a5 55%,#211136); }
+.vfx-frame--angel .vfx-placeholder { background: radial-gradient(circle at 76% 25%,#fff 0 9%,transparent 10%), linear-gradient(150deg,#faf1dc,#d6c18f 58%,#8d7750); color:#5f4c38; text-shadow:0 1px 7px rgba(255,255,255,.55); }
+.vfx-frame--venom .vfx-placeholder { background: radial-gradient(circle at 76% 25%,#d9ffac 0 8%,transparent 9%), linear-gradient(150deg,#254a35,#4f8d49 55%,#183225); }
+.vfx-frame--mythic .vfx-placeholder { background: radial-gradient(circle at 76% 25%,#fff4d8 0 8%,transparent 9%), linear-gradient(150deg,#342d36,#86745b 57%,#342a22); }
+.vfx-frame.is-visible .vfx-aura,
+.vfx-frame.is-visible .vfx-particles i,
+.vfx-frame.is-visible .vfx-ornaments::before,
+.vfx-frame.is-visible .vfx-ornaments::after,
+.vfx-frame.is-visible .vfx-effects::before,
+.vfx-frame.is-visible .vfx-frame-artwork,
+.vfx-frame.is-visible .vfx-effects::after { animation-play-state: running; }
+.vfx-frame--lightning.is-visible .vfx-effects::before,
+.vfx-frame--lightning.is-visible .vfx-ornaments::before,
+.vfx-frame--lightning.is-visible .vfx-ornaments::after { animation-play-state: running; }
+.memory-card.has-vfx { overflow: visible; }
+.memory-card.has-vfx .memory-card__visual { min-height: 0; overflow: visible; background: transparent; }
+.memory-card.has-vfx .memory-card__visual > .vfx-frame { width: 100%; }
+.personal-gallery__item.has-vfx { aspect-ratio: auto; overflow: visible; border: 0; background: transparent; }
+.personal-gallery__item.has-vfx .vfx-frame { padding: 18px; }
+.personal-gallery__item.has-vfx .vfx-placeholder { min-height: 65px; }
+.upload-preview:has(.vfx-frame) { display: block; max-height: none; overflow: visible; border: 0; background: transparent; }
+.upload-preview:has(.vfx-frame) > .vfx-frame { width: min(100%, 680px); margin-inline: auto; }
+.upload-preview .vfx-photo > img, .upload-preview .vfx-photo > video { max-height: 440px; object-fit: contain; }
+.market-item__art, .inventory-item { overflow: visible; }
+.market-vfx-preview { width: 100%; }
+.market-vfx-preview .vfx-frame { padding: 18px; }
+.market-vfx-preview .vfx-placeholder { min-height: 100px; }
+.viewer-vfx-mount { max-height: 78vh; }
+.viewer-vfx-mount .vfx-frame { max-height: 78vh; }
+.viewer-modal__content { max-height: calc(100vh - 48px); overflow: auto; }
+.viewer-vfx-mount .vfx-photo > img { max-height: 70vh; border-radius: 0; object-fit: contain; }
+.frame-card { overflow: visible; }
+.frame-card .vfx-frame { padding: 17px; }
+.frame-card .vfx-placeholder { min-height: 100px; }
+@media (max-width: 430px) {
+  .frame-card .vfx-frame { padding: 12px; }
+  .frame-card .vfx-placeholder { min-height: 90px; padding: 8px; }
+  .frame-card .vfx-placeholder strong { font-size: clamp(.72rem, 4vw, 1.05rem); letter-spacing: .04em; }
+  .frame-card .vfx-placeholder > span, .frame-card .vfx-placeholder small { font-size: .42rem; letter-spacing: .12em; }
+}
+#photoPreview.photo-preview--framed { display: block; min-height: 0; overflow: visible; padding: 0 10px; background: transparent; text-align: initial; }
+#photoPreview.photo-preview--framed .vfx-frame { width: 100%; margin-inline: auto; }
+#photoPreview.photo-preview--framed .vfx-placeholder { min-height: 230px; }
+@keyframes vfx-aura { 0%,100% { opacity:.38; transform:scale(.94); } 50% { opacity:.68; transform:scale(1.04); } }
+@keyframes vfx-blood-aura { 0%,100% { opacity:.38; transform:scale(.94); } 50% { opacity:.78; transform:scale(1.06); } }
+@keyframes vfx-blood-energy { 0%,100% { opacity:.44; box-shadow:0 0 10px #ee263b,inset 0 0 8px #8f0d26; } 50% { opacity:1; box-shadow:0 0 22px #ff4354,inset 0 0 15px #ae1232; } }
+@keyframes vfx-ocean-aura { 0%,100% { opacity:.4; transform:scale(.94) translateY(0); } 50% { opacity:.7; transform:scale(1.05) translateY(-2px); } }
+@keyframes vfx-electric-aura { 0%,100% { opacity:.32; transform:scale(.95); } 48%,52% { opacity:.82; transform:scale(1.06); } }
+@keyframes vfx-angel-aura { 0%,100% { opacity:.45; } 50% { opacity:.84; } }
+@keyframes vfx-venom-aura { 0%,100% { opacity:.38; transform:scale(.94) rotate(-1deg); } 50% { opacity:.72; transform:scale(1.06) rotate(1deg); } }
+@keyframes vfx-venom-energy { 0%,100% { opacity:.45; } 50% { opacity:.92; box-shadow:0 0 22px #83e142,inset 0 0 14px #2b8a45; } }
+@keyframes vfx-mythic-aura { 0%,100% { opacity:.42; transform:scale(.96); } 50% { opacity:.74; transform:scale(1.035); } }
+@keyframes vfx-drift { 0%,100% { opacity:.4; transform:translateY(2px) scale(.8); } 50% { opacity:1; transform:translateY(-5px) scale(1.15); } }
+@keyframes vfx-ember { 0%,100% { opacity:.45; transform:translateY(3px) scale(.75) rotate(0); } 50% { opacity:1; transform:translateY(-7px) scale(1.15) rotate(45deg); } }
+@keyframes vfx-bubble { 0% { opacity:.25; transform:translateY(5px) scale(.75); } 55% { opacity:.95; } 100% { opacity:.1; transform:translateY(-10px) scale(1.2); } }
+@keyframes vfx-wave { 0%,100% { opacity:.25; transform:scaleY(.9) rotate(-1deg); } 50% { opacity:.7; transform:scaleY(1.03) rotate(1deg); } }
+@keyframes vfx-electric-flash { 0%,78%,82%,100% { opacity:.18; } 79%,81% { opacity:1; } }
+@keyframes vfx-spark { 0%,100% { opacity:.2; transform:scaleY(.7); } 50% { opacity:1; transform:scaleY(1.25); } }
+@keyframes vfx-glow-drift { 0%,100% { opacity:.35; transform:translateY(2px) scale(.8); } 50% { opacity:1; transform:translateY(-6px) scale(1.2); } }
+@keyframes vfx-angel-wings { 0%,5%,88%,100% { opacity:.08; } 20%,68% { opacity:.75; } 42% { opacity:.46; } 55% { opacity:.82; } }
+@keyframes vfx-spore { 0%,100% { opacity:.35; transform:translateY(3px) scale(.8); } 50% { opacity:1; transform:translateY(-5px) scale(1.2); } }
+@keyframes vfx-mist { 0%,100% { opacity:.25; transform:translateX(-4px) scale(.8); } 50% { opacity:.75; transform:translateX(5px) scale(1.15); } }
+@keyframes vfx-mythic-ring { to { filter:hue-rotate(15deg); opacity:.78; } }
+@keyframes vfx-artwork-glow { 0%,100% { opacity:.9; } 50% { opacity:1; } }
+@media (prefers-reduced-motion: reduce) {
+  .vfx-frame *, .vfx-frame::before, .vfx-frame::after,
+  .vfx-frame *::before, .vfx-frame *::after { animation: none !important; transition: none !important; }
+}

@@ -5,7 +5,7 @@ const baseUrl = import.meta.env?.BASE_URL || './';
 const sellerLines = {
   entrance: ['Vaya, vaya... tenemos un nuevo visitante.', 'Piezas únicas para historias que merecen quedarse.', 'Pasa. Siempre hay algo especial esperando.'],
   purchase: ['Una excelente elección. Ya es tuya.', 'Una pieza digna de tu colección.', 'Ese marco va a lucir increíble en tus recuerdos.'],
-  broke: ['Aún te faltan monedas para esa pieza.', 'Vuelve cuando tengas más NR Coins.'],
+  broke: ['Aún te faltan monedas para esa pieza.', 'Vuelve cuando tengas más NexaCoins.'],
   special: ['Has elegido una pieza mítica. Cuídala bien.', 'Esto no se encuentra todos los días.'],
 };
 
@@ -55,9 +55,10 @@ export async function initMarket() {
 
   window.nexoraMarketUserId = () => currentUser()?.id || null;
   window.nexoraMarketFrameClass = (memory) => {
-    const item = inventory.find((owned) => owned.id === memory?.frameItemId);
+    const item = catalog.find((entry) => entry.id === memory?.frameItemId);
     return item ? `memory-card--${item.preview_style}` : '';
   };
+  window.nexoraMarketFrameStyle = (memory) => catalog.find((item) => item.id === memory?.frameItemId)?.preview_style || '';
   window.nexoraFrameItems = () => inventory.filter((item) => item.category === 'frame');
   window.nexoraEquippedFrameId = () => equippedItemId;
   window.nexoraRefreshMarket = loadMarket;
@@ -87,10 +88,11 @@ async function loadMarket() {
     balance = Number(profile[0]?.coin_balance || 0);
     equippedItemId = equipped[0]?.item_id || null;
     transactions = history;
-    ui.connection.textContent = 'NR COINS · SINCRONIZADAS';
+    ui.connection.textContent = 'NEXACOINS · SINCRONIZADAS';
     ui.status.textContent = 'Tus compras y marcos desbloqueados se guardan en tu cuenta.';
     renderMarket();
     window.dispatchEvent(new CustomEvent('nexora:inventory-ready', { detail: inventory }));
+    window.dispatchEvent(new Event('nexora:frame-catalog-ready'));
   } catch (error) {
     ui.connection.textContent = 'NO SE PUDO CARGAR';
     ui.status.textContent = `Revisa la migración de la tienda en Supabase. ${error.message}`;
@@ -105,34 +107,59 @@ function renderMarket() {
 }
 
 function renderWallet() {
-  if (ui.wallet) ui.wallet.textContent = `${formatNumber(balance)} NR`;
+  if (ui.wallet) ui.wallet.textContent = `${formatNumber(balance)} NX`;
 }
 
 function renderCatalog() {
   if (!ui.catalog) return;
+  window.NexoraVfx?.unobserveFrames(ui.catalog);
   const items = catalog.filter((item) => selectedCategory === 'all' || item.category === selectedCategory);
   ui.catalog.innerHTML = items.length ? items.map((item) => {
     const owned = inventory.some((entry) => entry.id === item.id);
+    const frameStyle = window.NexoraVfx?.normalizeStyle(item.preview_style);
+    const art = item.category === 'frame' && frameStyle
+      ? `<div class="market-vfx-preview" data-vfx-style="${escapeHtml(frameStyle)}" data-vfx-label="${escapeHtml(item.name)}"></div>`
+      : `<div class="market-frame-preview market-frame-preview--${escapeHtml(item.preview_style)}"><span>NEXORA</span><strong>RECUERDO</strong><small>MELGAR · 2026</small></div>`;
     return `<article class="market-item market-rarity--${escapeHtml(item.rarity)}" data-item-card="${escapeHtml(item.id)}">
-      <div class="market-item__art"><span class="market-rarity">${escapeHtml(item.rarity)}</span><div class="market-frame-preview market-frame-preview--${escapeHtml(item.preview_style)}"><span>NEXORA</span><strong>RECUERDO</strong><small>MELGAR · 2026</small></div></div>
-      <div class="market-item__body"><h3>${escapeHtml(item.name)}</h3><p>${escapeHtml(item.description)}</p><div class="market-item__buy"><strong class="market-price">${formatNumber(item.price)} <small>NR COINS</small></strong><button class="button" type="button" data-market-buy="${escapeHtml(item.id)}" ${owned || busy ? 'disabled' : ''}>${owned ? 'Desbloqueado' : 'Ver y comprar'}</button></div></div>
+      <div class="market-item__art"><span class="market-rarity">${escapeHtml(item.rarity)}</span>${art}</div>
+      <div class="market-item__body"><h3>${escapeHtml(item.name)}</h3><p>${escapeHtml(item.description)}</p><div class="market-item__buy"><strong class="market-price">${formatNumber(item.price)} <small>NX</small></strong><button class="button" type="button" data-market-buy="${escapeHtml(item.id)}" ${owned || busy ? 'disabled' : ''}>${owned ? 'Comprado' : 'Comprar marco'}</button></div></div>
     </article>`;
   }).join('') : '<p class="market-empty">Todavía no hay artículos en esta categoría.</p>';
+  mountMarketBfxPreviews(ui.catalog);
 }
 
 function renderInventory() {
   if (!ui.inventory) return;
+  window.NexoraVfx?.unobserveFrames(ui.inventory);
   ui.inventory.innerHTML = inventory.length
-    ? inventory.map((item) => `<article class="inventory-item"><div class="market-frame-preview market-frame-preview--${escapeHtml(item.preview_style)}"><span>NEXORA</span><strong>RECUERDO</strong><small>MELGAR · 2026</small></div><div><strong>${escapeHtml(item.name)}</strong><small>${equippedItemId === item.id ? 'Equipado' : 'En tu colección'}</small><button class="button-ghost" type="button" data-market-equip="${escapeHtml(item.id)}">${equippedItemId === item.id ? 'Quitar marco' : 'Equipar marco'}</button></div></article>`).join('')
+    ? inventory.map((item) => {
+      const frameStyle = window.NexoraVfx?.normalizeStyle(item.preview_style);
+      const art = item.category === 'frame' && frameStyle
+        ? `<div class="market-vfx-preview" data-vfx-style="${escapeHtml(frameStyle)}" data-vfx-label="${escapeHtml(item.name)}"></div>`
+        : `<div class="market-frame-preview market-frame-preview--${escapeHtml(item.preview_style)}"><span>NEXORA</span><strong>RECUERDO</strong><small>MELGAR · 2026</small></div>`;
+      return `<article class="inventory-item">${art}<div><strong>${escapeHtml(item.name)}</strong><small>${equippedItemId === item.id ? 'Equipado' : 'En tu colección'}</small><button class="button-ghost" type="button" data-market-equip="${escapeHtml(item.id)}">${equippedItemId === item.id ? 'Quitar marco' : 'Equipar marco'}</button></div></article>`;
+    }).join('')
     : '<p class="market-empty">Tus marcos comprados aparecerán aquí.</p>';
+  mountMarketBfxPreviews(ui.inventory);
   const equipped = inventory.find((item) => item.id === equippedItemId);
   if (ui.equipped) ui.equipped.textContent = equipped ? `Equipado · ${equipped.name}` : 'Sin marco equipado';
+}
+
+function mountMarketBfxPreviews(root) {
+  const vfx = window.NexoraVfx;
+  if (!vfx) throw new Error('VFX frame effects are not loaded.');
+  root.querySelectorAll('[data-vfx-style]').forEach((target) => {
+    const style = vfx.normalizeStyle(target.dataset.vfxStyle);
+    if (!style) return;
+    target.replaceChildren(vfx.createFrame(style, { placeholder: target.dataset.vfxLabel || 'NEXORA' }));
+  });
+  vfx.observeFrames(root);
 }
 
 function renderHistory() {
   if (!ui.history) return;
   ui.history.innerHTML = transactions.length
-    ? transactions.map((entry) => `<div class="market-transaction"><span>${escapeHtml(entry.reason)}<small>${formatDate(entry.created_at)}</small></span><strong class="${entry.delta < 0 ? 'is-debit' : 'is-credit'}">${entry.delta > 0 ? '+' : ''}${formatNumber(entry.delta)} NR</strong></div>`).join('')
+    ? transactions.map((entry) => `<div class="market-transaction"><span>${escapeHtml(entry.reason)}<small>${formatDate(entry.created_at)}</small></span><strong class="${entry.delta < 0 ? 'is-debit' : 'is-credit'}">${entry.delta > 0 ? '+' : ''}${formatNumber(entry.delta)} NX</strong></div>`).join('')
     : '<p class="market-empty">Todavía no hay movimientos.</p>';
 }
 
@@ -141,7 +168,7 @@ async function handleCatalogAction(event) {
   if (!button || button.disabled || busy) return;
   const item = catalog.find((entry) => entry.id === button.dataset.marketBuy);
   if (!item) return;
-  if (!window.confirm(`¿Comprar ${item.name} por ${formatNumber(item.price)} NR Coins?`)) return;
+  if (!window.confirm(`¿Comprar ${item.name} por ${formatNumber(item.price)} NexaCoins?`)) return;
   busy = true; renderCatalog();
   try {
     const result = await callRpc('nexora_buy_item', { p_item_id: item.id });
@@ -176,7 +203,7 @@ function revealPurchase(item, newBalance) {
   const cost = document.querySelector('#revealCost');
   const preview = document.querySelector('#revealFrame');
   if (name) name.textContent = item.name;
-  if (cost) cost.textContent = `−${formatNumber(item.price)} NR Coins · Saldo: ${formatNumber(newBalance)} NR`;
+  if (cost) cost.textContent = `−${formatNumber(item.price)} NexaCoins · Saldo: ${formatNumber(newBalance)} NX`;
   if (preview) preview.className = `market-frame-preview market-frame-preview--${item.preview_style}`;
   ui.reveal?.classList.remove('hidden');
   window.clearTimeout(revealTimer);

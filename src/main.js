@@ -5,6 +5,7 @@ import {
   updateRows, uploadPrivateObject,
 } from './supabase.js';
 
+const vfx = window.NexoraVfx;
 const STORAGE_KEY = 'nexora-melgar-album-v1';
 const TRIP_START = '2026-11-20T00:00:00-05:00';
 const RANKS = ['Rookie', 'Explorer', 'Adventurer', 'Photographer', 'Elite Traveler', 'Nexora Legend'];
@@ -132,6 +133,31 @@ let uploadPreviewUrl = '';
 let rewardMessageUntil = 0;
 let adminNavLink;
 
+function showToast(message, { type = 'info', duration = 3600 } = {}) {
+  const container = document.querySelector('#toastContainer') || (() => {
+    const node = document.createElement('div');
+    node.id = 'toastContainer';
+    node.className = 'toast-container';
+    node.setAttribute('aria-live', 'polite');
+    node.setAttribute('aria-atomic', 'true');
+    document.body.appendChild(node);
+    return node;
+  })();
+  const toast = document.createElement('div');
+  toast.className = `toast toast--${type}`;
+  toast.textContent = message;
+  toast.setAttribute('role', 'status');
+  container.appendChild(toast);
+  requestAnimationFrame(() => toast.classList.add('is-visible'));
+  window.setTimeout(() => {
+    toast.classList.remove('is-visible');
+    window.setTimeout(() => toast.remove(), 200);
+  }, duration);
+}
+
+function notifySuccess(message) { showToast(message, { type: 'success', duration: 2800 }); }
+function notifyError(message) { showToast(message, { type: 'error', duration: 4200 }); }
+
 let appStarted = false;
 let connectionRetryBound = false;
 let mediaOffset = 0;
@@ -140,9 +166,15 @@ let memoryCardObserver;
 
 startNexora();
 window.addEventListener('nexora:render-gallery', renderGallery);
+window.addEventListener('nexora:frame-catalog-ready', () => { renderGallery(); renderGame(); });
 
 async function startNexora() {
   bindConnectionRetry();
+  if (window.location.protocol === 'file:') {
+    showAuthGate();
+    setAuthStatus('No abras index.html directamente. Instala Node.js 20+, abre una terminal en la carpeta del proyecto, ejecuta “npm install” y luego “npm run dev”. Abre http://localhost:3000/viaje/.', true);
+    return;
+  }
   if (!isSupabaseConfigured) {
     showAuthGate();
     setAuthStatus('NEXORA necesita conexión con Supabase para crear tu perfil seguro. Configura la URL y la publishable key.', true);
@@ -336,7 +368,7 @@ async function loadNextMemories() {
     mediaOffset += rows.length;
     mediaHasMore = rows.length === 24;
     renderGallery();
-  } catch (error) { window.alert(`No se pudieron cargar más fotos: ${error.message}`); }
+  } catch (error) { notifyError(`No se pudieron cargar más fotos: ${error.message}`); }
   finally {
     if (app.loadMoreMemories) { app.loadMoreMemories.disabled = false; app.loadMoreMemories.textContent = 'Cargar más fotos'; app.loadMoreMemories.classList.toggle('hidden', !mediaHasMore); }
   }
@@ -473,7 +505,7 @@ function bindEvents() {
         await insertRow('trip_messages', { user_id: currentUser().id, body: text });
         state.messages.unshift({ id: crypto.randomUUID(), author: window.nexoraMemberName, text, createdAt: new Date().toISOString() });
         renderMessages(); app.messageForm.reset();
-      } catch (error) { window.alert(`No se pudo enviar el mensaje: ${error.message}`); }
+      } catch (error) { notifyError(`No se pudo enviar el mensaje: ${error.message}`); }
     });
   }
 
@@ -522,12 +554,12 @@ function bindEvents() {
         const isImage = file.type.startsWith('image/');
         const isVideo = file.type.startsWith('video/');
         if (!isImage && !isVideo) {
-          window.alert(`${file.name}: solo se permiten imágenes y videos.`);
+          notifyError(`${file.name}: solo se permiten imágenes y videos.`);
           continue;
         }
         const duration = isVideo ? await getVideoDuration(file) : null;
         if (isVideo && duration > 20) {
-          window.alert(`${file.name}: los videos deben durar 20 segundos o menos.`);
+          notifyError(`${file.name}: los videos deben durar 20 segundos o menos.`);
         } else acceptedFiles.push({ file, duration });
       }
       if (!acceptedFiles.length) return;
@@ -536,9 +568,9 @@ function bindEvents() {
       const tags = normalizeTags(app.memoryHashtags?.value || '');
       const frameId = app.memoryFrameId?.value || null;
       const userId = currentUser()?.id;
-      if (!userId) { window.alert('Inicia sesión para publicar en el álbum privado.'); return; }
+      if (!userId) { notifyError('Inicia sesión para publicar en el álbum privado.'); return; }
       if (frameId && !window.nexoraFrameItems?.().some((item) => item.id === frameId)) {
-        window.alert('Ese marco no está en tu inventario.'); return;
+        notifyError('Ese marco no está en tu inventario.'); return;
       }
       const publishButton = app.uploadForm.querySelector('[type="submit"]');
       if (publishButton) { publishButton.disabled = true; publishButton.textContent = 'Subiendo…'; }
@@ -564,12 +596,13 @@ function bindEvents() {
         app.uploadForm.classList.add('hidden'); app.uploadPreview?.classList.add('hidden');
         if (app.selectedUploadLabel) app.selectedUploadLabel.textContent = 'Elige fotos o videos';
         populateUploadFrames();
+        notifySuccess('Recuerdo publicado correctamente.');
       } catch (error) {
         const unattached = uploadedPaths.filter((path) => !insertedPaths.has(path));
         if (unattached.length) { try { await removePrivateObjects(unattached); } catch { /* El objeto sigue siendo privado si falla la limpieza. */ } }
         await loadPrivateData().catch(() => {});
         renderGallery();
-        window.alert(`No se pudo publicar el recuerdo: ${error.message}`);
+        notifyError(`No se pudo publicar el recuerdo: ${error.message}`);
       } finally {
         if (publishButton) { publishButton.disabled = false; publishButton.textContent = 'Publicar recuerdo'; }
       }
@@ -602,7 +635,7 @@ function bindEvents() {
       await insertRow('memory_comments', { memory_id: memory.id, user_id: currentUser().id, author_name: author, body: text, status: 'approved' });
       memory.comments = [...previous, { author, text, createdAt: new Date().toISOString() }];
       renderGallery();
-    } catch (error) { window.alert(`No se pudo publicar el comentario: ${error.message}`); }
+    } catch (error) { notifyError(`No se pudo publicar el comentario: ${error.message}`); }
   });
 
   document.querySelectorAll('[data-close-modal]').forEach((button) => {
@@ -703,7 +736,15 @@ function updateUploadFramePreview() {
       ? `<span>${escapeHtml(frame.name)} · Vista previa</span>`
       : '<span>Selecciona un marco desbloqueado para verlo aplicado</span>';
   }
-  if (app.uploadPreview) app.uploadPreview.dataset.frameStyle = frame?.preview_style || '';
+  if (!app.uploadPreview) return;
+  const media = uploadPreviewUrl && app.uploadPreviewImage && !app.uploadPreviewImage.hidden
+    ? app.uploadPreviewImage
+    : uploadPreviewUrl && app.uploadPreviewVideo && !app.uploadPreviewVideo.hidden
+      ? app.uploadPreviewVideo
+      : null;
+  const style = vfx.normalizeStyle(frame?.preview_style);
+  if (media && style) vfx.mountFrame(app.uploadPreview, style, { content: media });
+  else vfx.restoreContent(app.uploadPreview, [app.uploadPreviewImage, app.uploadPreviewVideo]);
 }
 
 function clearUploadDraft() {
@@ -723,15 +764,15 @@ async function saveProfileEdits(event) {
   const participant = state.participants.find((person) => person.id === currentUser()?.id);
   if (!participant) return;
   const name = app.profileNameInput?.value.trim();
-  if (!name) { window.alert('Escribe un nombre para tu perfil.'); return; }
+  if (!name) { notifyError('Escribe un nombre para tu perfil.'); return; }
   const description = app.profileDescriptionInput?.value.trim() || '';
-  if (description.length > 280) { window.alert('La descripción no puede superar 280 caracteres.'); return; }
+  if (description.length > 280) { notifyError('La descripción no puede superar 280 caracteres.'); return; }
   const auraStyle = ['none', 'rose', 'gold', 'violet', 'ice'].includes(app.profileAuraInput?.value)
     ? app.profileAuraInput.value
     : 'none';
   const imageFile = app.profileImageInput?.files?.[0];
   if (imageFile && (!imageFile.type.startsWith('image/') || imageFile.size > 8 * 1024 * 1024)) {
-    window.alert('Elige una imagen de hasta 8 MB.');
+    notifyError('Elige una imagen de hasta 8 MB.');
     return;
   }
   let avatarPath;
@@ -750,12 +791,13 @@ async function saveProfileEdits(event) {
     await loadPrivateData();
   } catch (error) {
     if (avatarPath) { try { await removePrivateObjects([avatarPath]); } catch { /* La ruta continúa siendo privada. */ } }
-    window.alert(`No se pudo guardar el perfil: ${error.message}`);
+    notifyError(`No se pudo guardar el perfil: ${error.message}`);
     return;
   }
   app.profileEditForm.reset();
   renderParticipants();
   renderGame();
+  notifySuccess('Perfil actualizado correctamente.');
 }
 
 function startActiveRewardClock() {
@@ -773,7 +815,7 @@ function startActiveRewardClock() {
       window.dispatchEvent(new CustomEvent('nexora:coins-updated', { detail: Number(result.balance || 0) }));
       if (Number(result.awarded) > 0) {
         rewardMessageUntil = Date.now() + 3500;
-        counter.textContent = `+${result.awarded} NR Coins · ¡Recompensa!`;
+        counter.textContent = `+${result.awarded} NexaCoins · ¡Recompensa!`;
         counter.classList.add('reward-received');
         window.setTimeout(() => counter.classList.remove('reward-received'), 3500);
       }
@@ -786,7 +828,7 @@ function startActiveRewardClock() {
     if (remaining <= 0) { claimFromServer(); return; }
     if (Date.now() >= rewardMessageUntil) {
       const seconds = Math.ceil(remaining / 1000);
-      counter.textContent = `NR Coins en ${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`;
+      counter.textContent = `NexaCoins en ${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`;
     }
   }, 1000);
 }
@@ -881,10 +923,24 @@ function renderGame() {
   const claimedMissions = state.game.missions.filter((mission) => profile.claimed.includes(mission.daily ? `${mission.id}:${localDay()}` : mission.id));
   const badges = [...new Set([...profile.badges, ...claimedMissions.map((mission) => mission.title)])];
   const currentBalance = Number(state.currentProfile?.coin_balance || 0);
-  app.playerProfile.innerHTML = `<div class="profile-avatar profile-avatar--aura-${auraClass(participant?.auraStyle)}">${avatar}</div><div class="profile-main"><span class="eyebrow">NEXORA · NIVEL ${level}</span><h3>${escapeHtml(RANKS[level - 1])} · ${escapeHtml(participant?.name || 'Integrante')}</h3><p class="muted-copy">${escapeHtml(participant?.description || 'Cuéntales algo de ti a los demás invitados.')}</p><div class="xp-track"><span style="width:${progress}%"></span></div><small>${profile.xp} XP · ${xpStep - profile.xp % xpStep} XP para el siguiente nivel</small><div class="inventory-items">${ownedFrames.length ? ownedFrames.map((name) => `<span>${escapeHtml(name)}</span>`).join('') : '<span>Tu colección de marcos está vacía</span>'}</div><div class="inventory-items">${badges.length ? badges.map((badge) => `<span>✦ ${escapeHtml(badge)}</span>`).join('') : '<span>Logros por desbloquear</span>'}</div></div><div class="profile-stats"><strong>${formatNumber(currentBalance)} NR</strong><span>${photos.length} fotos aprobadas · ${ownedFrames.length} marcos</span><span>${profile.claimed.length} misiones completadas · ${badges.length} logros</span></div>`;
-  if (app.personalGallery) app.personalGallery.innerHTML = memories.length
-    ? memories.slice(0, 8).map((memory) => `<button class="personal-gallery__item" type="button" data-memory-id="${escapeHtml(memory.id)}" aria-label="Abrir recuerdo: ${escapeHtml(memory.caption)}">${memory.type === 'video' ? '<span class="personal-gallery__video">▶</span>' : `<img src="${escapeHtml(memory.src)}" alt="" loading="lazy" decoding="async"/>`}</button>`).join('')
-    : '<p class="muted-copy">Tus fotografías aprobadas aparecerán aquí.</p>';
+  app.playerProfile.innerHTML = `<div class="profile-avatar profile-avatar--aura-${auraClass(participant?.auraStyle)}">${avatar}</div><div class="profile-main"><span class="eyebrow">NEXORA · NIVEL ${level}</span><h3>${escapeHtml(RANKS[level - 1])} · ${escapeHtml(participant?.name || 'Integrante')}</h3><p class="muted-copy">${escapeHtml(participant?.description || 'Cuéntales algo de ti a los demás invitados.')}</p><div class="xp-track"><span style="width:${progress}%"></span></div><small>${profile.xp} XP · ${xpStep - profile.xp % xpStep} XP para el siguiente nivel</small><div class="inventory-items">${ownedFrames.length ? ownedFrames.map((name) => `<span>${escapeHtml(name)}</span>`).join('') : '<span>Tu colección de marcos está vacía</span>'}</div><div class="inventory-items">${badges.length ? badges.map((badge) => `<span>✦ ${escapeHtml(badge)}</span>`).join('') : '<span>Logros por desbloquear</span>'}</div></div><div class="profile-stats"><strong>${formatNumber(currentBalance)} NX</strong><span>${photos.length} fotos aprobadas · ${ownedFrames.length} marcos</span><span>${profile.claimed.length} misiones completadas · ${badges.length} logros</span></div>`;
+  if (app.personalGallery) {
+    vfx.unobserveFrames(app.personalGallery);
+    const personalMemories = memories.slice(0, 8);
+    app.personalGallery.innerHTML = personalMemories.length
+      ? personalMemories.map((memory) => `<button class="personal-gallery__item" type="button" data-memory-id="${escapeHtml(memory.id)}" aria-label="Abrir recuerdo: ${escapeHtml(memory.caption)}">${memory.type === 'video' ? '<span class="personal-gallery__video">▶</span>' : `<img src="${escapeHtml(memory.src)}" alt="" loading="lazy" decoding="async"/>`}</button>`).join('')
+      : '<p class="muted-copy">Tus fotografías aprobadas aparecerán aquí.</p>';
+    personalMemories.forEach((memory) => {
+      if (memory.type !== 'image') return;
+      const style = vfx.normalizeStyle(window.nexoraMarketFrameStyle?.(memory));
+      const item = [...app.personalGallery.querySelectorAll('.personal-gallery__item')].find((node) => node.dataset.memoryId === memory.id);
+      const image = item?.querySelector('img');
+      if (!style || !item || !image) return;
+      item.classList.add('has-vfx');
+      vfx.mountFrame(item, style, { content: image });
+    });
+    vfx.observeFrames(app.personalGallery);
+  }
   app.questList.innerHTML = state.game.missions.map((mission) => {
     const claimKey = mission.daily ? `${mission.id}:${localDay()}` : mission.id;
     const claimed = profile.claimed.includes(claimKey);
@@ -895,7 +951,7 @@ function renderGame() {
     const progressCount = mission.kind === 'secret' ? memories.filter((memory) => memory.tags?.includes('nexora')).length : Math.min(matching, mission.goal);
     const ready = progressCount >= mission.goal && !claimed;
     const title = mission.secret && !claimed ? '??? Misión desconocida' : mission.title;
-    return `<article class="quest-card"><div><span class="eyebrow">${mission.daily ? 'DIARIA' : 'ESPECIAL'} · ${mission.reward} NP${mission.coinReward ? ` · ${mission.coinReward} NR` : ''}</span><h4>${escapeHtml(title)}</h4><p>${escapeHtml(mission.secret && !claimed ? 'Descubre cómo revelar este reto.' : mission.description)}</p><div class="quest-progress"><span style="width:${Math.round(progressCount / mission.goal * 100)}%"></span></div><small>${progressCount}/${mission.goal} · ${mission.xp} XP</small></div><button class="button ${ready ? '' : 'button-ghost'}" data-game-action="claim" data-id="${escapeHtml(mission.id)}" ${ready ? '' : 'disabled'}>${claimed ? 'Completada' : 'Reclamar'}</button></article>`;
+    return `<article class="quest-card"><div><span class="eyebrow">${mission.daily ? 'DIARIA' : 'ESPECIAL'} · ${mission.reward} NP${mission.coinReward ? ` · ${mission.coinReward} NX` : ''}</span><h4>${escapeHtml(title)}</h4><p>${escapeHtml(mission.secret && !claimed ? 'Descubre cómo revelar este reto.' : mission.description)}</p><div class="quest-progress"><span style="width:${Math.round(progressCount / mission.goal * 100)}%"></span></div><small>${progressCount}/${mission.goal} · ${mission.xp} XP</small></div><button class="button ${ready ? '' : 'button-ghost'}" data-game-action="claim" data-id="${escapeHtml(mission.id)}" ${ready ? '' : 'disabled'}>${claimed ? 'Completada' : 'Reclamar'}</button></article>`;
   }).join('');
   if (app.storeGrid) app.storeGrid.innerHTML = '<p class="muted-copy">La colección sincronizada está en la Tienda.</p>';
   const ranked = [...state.participants].sort((a, b) => (getProfile(b.id).points - getProfile(a.id).points));
@@ -918,7 +974,7 @@ async function approveMemory(memoryId) {
     await callRpc('nexora_review_memory', { p_memory_id: memoryId, p_approved: true });
     await loadPrivateData();
     renderGallery(); renderTimeline(); renderGame();
-  } catch (error) { window.alert(`No se pudo aprobar: ${error.message}`); }
+  } catch (error) { notifyError(`No se pudo aprobar: ${error.message}`); }
 }
 
 async function claimMission(slug) {
@@ -931,7 +987,7 @@ async function claimMission(slug) {
     const message = /MISSION_NOT_COMPLETE/.test(error.message)
       ? 'Aún no se cumple el objetivo de esta misión.'
       : /MISSION_ALREADY_CLAIMED/.test(error.message) ? 'Ya reclamaste esta misión.' : error.message;
-    window.alert(message);
+    notifyError(message);
   }
 }
 
@@ -992,6 +1048,7 @@ function renderParticipants() {
 
 function renderGallery() {
   if (!app.galleryGrid) return;
+  vfx.unobserveFrames(app.galleryGrid);
 
   const selectedParticipant = app.galleryParticipantFilter?.value || 'all';
   const selectedDate = app.galleryDateFilter?.value || '';
@@ -1008,7 +1065,7 @@ function renderGallery() {
   app.galleryGrid.innerHTML = visibleMemories
     .map(
       (memory) => `
-        <article class="memory-card ${memory.approved === false ? 'memory-pending' : ''} ${window.nexoraMarketFrameClass?.(memory) || ''}" data-memory-id="${escapeHtml(memory.id)}" data-memory-type="${escapeHtml(memory.type || 'image')}">
+        <article class="memory-card ${memory.approved === false ? 'memory-pending' : ''}" data-memory-id="${escapeHtml(memory.id)}" data-memory-type="${escapeHtml(memory.type || 'image')}">
           <div class="memory-card__visual">
             ${memory.type === 'video'
               ? `<video src="${escapeHtml(memory.src)}" controls playsinline muted></video>`
@@ -1028,6 +1085,18 @@ function renderGallery() {
       `
     )
     .join('');
+  const cardsById = new Map([...app.galleryGrid.querySelectorAll('.memory-card')].map((card) => [card.dataset.memoryId, card]));
+  visibleMemories.forEach((memory) => {
+    if (memory.type === 'video') return;
+    const style = vfx.normalizeStyle(window.nexoraMarketFrameStyle?.(memory));
+    const card = cardsById.get(memory.id);
+    const visual = card?.querySelector('.memory-card__visual');
+    const image = visual?.querySelector('img');
+    if (!style || !card || !visual || !image) return;
+    card.classList.add('has-vfx', `memory-card--${style}`);
+    vfx.mountFrame(visual, style, { content: image });
+  });
+  vfx.observeFrames(app.galleryGrid);
   observeMemoryCards();
   renderHomeFeature();
 }
@@ -1039,7 +1108,7 @@ async function changeMemoryFrame(memoryId, frameId) {
     if (memory) memory.frameItemId = frameId;
     renderGallery();
   } catch (error) {
-    window.alert(/FRAME_NOT_OWNED/.test(error.message) ? 'Solo puedes usar marcos que ya compraste.' : `No se pudo cambiar el marco: ${error.message}`);
+    notifyError(/FRAME_NOT_OWNED/.test(error.message) ? 'Solo puedes usar marcos que ya compraste.' : `No se pudo cambiar el marco: ${error.message}`);
     renderGallery();
   }
 }
@@ -1053,7 +1122,7 @@ async function toggleMemoryFavorite(button) {
     else await insertRow('memory_favorites', { memory_id: memory.id, user_id: userId });
     memory.favorite = !memory.favorite;
     renderGallery();
-  } catch (error) { window.alert(`No se pudo actualizar Favoritas: ${error.message}`); }
+  } catch (error) { notifyError(`No se pudo actualizar Favoritas: ${error.message}`); }
 }
 
 async function toggleMemoryReaction(button) {
@@ -1070,7 +1139,7 @@ async function toggleMemoryReaction(button) {
       memory.reactions = [...(memory.reactions || []), { user_id: userId, reaction: 'heart' }];
     }
     renderGallery();
-  } catch (error) { window.alert(`No se pudo guardar la reacción: ${error.message}`); }
+  } catch (error) { notifyError(`No se pudo guardar la reacción: ${error.message}`); }
 }
 
 function renderActivities() {
@@ -1140,11 +1209,10 @@ function renderDonations() {
 
 function openViewer(memory) {
   if (!app.viewerModal || !app.viewerContent) return;
+  vfx.unobserveFrames(app.viewerContent);
   app.viewerModal.classList.remove('hidden');
   app.viewerContent.innerHTML = `
-    ${memory.type === 'video'
-      ? `<video class="viewer-media" src="${escapeHtml(memory.src)}" controls playsinline></video>`
-      : `<img class="viewer-media" src="${escapeHtml(memory.src)}" alt="${escapeHtml(memory.caption)}" />`}
+    <div class="viewer-vfx-mount"></div>
     <div class="viewer-meta">
       <div>
         <strong>${escapeHtml(memory.uploader)}</strong>
@@ -1154,6 +1222,19 @@ function openViewer(memory) {
     </div>
     <p>${escapeHtml(memory.caption)}</p>
   `;
+  const media = document.createElement(memory.type === 'video' ? 'video' : 'img');
+  media.className = 'viewer-media';
+  media.src = memory.src;
+  if (memory.type === 'video') {
+    media.controls = true;
+    media.playsInline = true;
+  } else {
+    media.alt = memory.caption || '';
+  }
+  const style = memory.type === 'image' ? vfx.normalizeStyle(window.nexoraMarketFrameStyle?.(memory)) : '';
+  const framedMedia = style ? vfx.createFrame(style, { content: media }) : media;
+  app.viewerContent.querySelector('.viewer-vfx-mount').replaceChildren(framedMedia);
+  if (style) vfx.observeFrames(framedMedia);
 }
 
 function closeViewer() {

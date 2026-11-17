@@ -119,19 +119,10 @@ body {
 }
 @media (prefers-reduced-motion:reduce) { .upload-choice-sheet__card { animation:none; } }
 
-/* Six lightweight collectible VFX. The original photo remains untouched. */
+/* Gallery cards reveal independently of their frame effects. */
 .memory-card { opacity:0; transform:translateY(10px); transition:opacity .42s ease,transform .42s ease; }
 .memory-card.is-revealed { opacity:1; transform:translateY(0); }
 .memory-card.is-revealed:hover { transform:translateY(-3px); }
-.memory-card__visual { position:relative; isolation:isolate; }
-.memory-card__visual::after { position:absolute; z-index:2; inset:5px; border:2px solid transparent; border-radius:inherit; content:""; pointer-events:none; }
-.memory-card--blood .memory-card__visual::after { border-color:#e24b58; box-shadow:inset 0 0 22px #b8112b55,0 0 15px #d51a374f; background:radial-gradient(circle at 13% 22%,#ff526d 0 1px,transparent 3px),radial-gradient(circle at 88% 32%,#c82036 0 2px,transparent 4px),radial-gradient(circle at 28% 87%,#ff526d 0 1px,transparent 3px); background-size:100% 100%; animation:vfx-blood 5s ease-in-out infinite alternate; }
-.memory-card--ocean .memory-card__visual::after { border-color:#71d9dc; box-shadow:inset 0 0 24px #1794b749,0 0 14px #3ac4d44d; background:repeating-linear-gradient(168deg,transparent 0 18px,#b6f6ef22 19px 20px,transparent 21px 37px); animation:vfx-water 8s linear infinite; }
-.memory-card--lightning .memory-card__visual::after { border-color:#b6a2ff; box-shadow:inset 0 0 20px #8a6bfa40,0 0 16px #9f84ff77; background:linear-gradient(112deg,transparent 48%,#e7ddff99 49%,transparent 50%),linear-gradient(72deg,transparent 78%,#a695ff88 79%,transparent 80%); animation:vfx-lightning 4s steps(2,end) infinite; }
-.memory-card--angel .memory-card__visual::after { inset:8px 5px; border-color:#f3dfcf; box-shadow:0 0 18px #fff0d970,inset 0 0 20px #ffeed533; background:radial-gradient(ellipse at 4% 45%,#fff1dc55,transparent 24%),radial-gradient(ellipse at 96% 45%,#fff1dc55,transparent 24%); animation:vfx-angel 10s ease-in-out infinite; }
-.memory-card--venom .memory-card__visual::after { border-color:#a8d96d; box-shadow:inset 0 0 20px #74b92955,0 0 14px #80c63e66; background:radial-gradient(circle at 20% 25%,#b6ed7e55 0 2px,transparent 12px),radial-gradient(circle at 79% 75%,#85c83e55 0 3px,transparent 16px); animation:vfx-venom 6s ease-in-out infinite alternate; }
-.memory-card--mythic .memory-card__visual::after { border-color:#f4e1c8; box-shadow:inset 0 0 24px #fff1da44,0 0 18px #e4c9a777; background:linear-gradient(120deg,transparent 30%,#fff5e955 48%,transparent 62%); background-size:220% 100%; animation:vfx-mythic 7s ease-in-out infinite; }
-.memory-card:not(.is-inview) .memory-card__visual::after { animation-play-state:paused; }
 .personal-gallery { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:7px; }
 .personal-gallery__item { position:relative; aspect-ratio:1; overflow:hidden; border:1px solid #fff0df35; border-radius:10px; background:#241a19; cursor:pointer; }
 .personal-gallery__item img { width:100%; height:100%; object-fit:cover; }
@@ -140,20 +131,7 @@ body {
 .memory-frame-control .form-input { padding:8px 10px; font-size:.72rem; }
 .upload-preview { position:relative; display:grid; min-height:100px; max-height:440px; overflow:hidden; place-items:center; border:1px solid #fff0df35; border-radius:16px; background:#120e0e; }
 .upload-preview img,.upload-preview video { width:100%; max-height:440px; object-fit:contain; }
-.upload-preview::after { position:absolute; inset:6px; border:3px solid transparent; border-radius:12px; content:""; pointer-events:none; }
-.upload-preview[data-frame-style="blood"]::after { border-color:#e24b58; box-shadow:inset 0 0 24px #b8112b44,0 0 15px #d51a3755; background:radial-gradient(circle at 13% 22%,#ff526d 0 1px,transparent 3px),radial-gradient(circle at 88% 32%,#c82036 0 2px,transparent 4px); }
-.upload-preview[data-frame-style="ocean"]::after { border-color:#71d9dc; box-shadow:inset 0 0 24px #1794b749,0 0 14px #3ac4d44d; background:repeating-linear-gradient(168deg,transparent 0 18px,#b6f6ef22 19px 20px,transparent 21px 37px); }
-.upload-preview[data-frame-style="lightning"]::after { border-color:#b6a2ff; box-shadow:inset 0 0 20px #8a6bfa40,0 0 16px #9f84ff77; background:linear-gradient(112deg,transparent 48%,#e7ddff99 49%,transparent 50%); }
-.upload-preview[data-frame-style="angel"]::after { border-color:#f3dfcf; box-shadow:0 0 18px #fff0d970,inset 0 0 20px #ffeed533; background:radial-gradient(ellipse at 4% 45%,#fff1dc55,transparent 24%),radial-gradient(ellipse at 96% 45%,#fff1dc55,transparent 24%); animation:vfx-angel 10s ease-in-out infinite; }
-.upload-preview[data-frame-style="venom"]::after { border-color:#a8d96d; box-shadow:inset 0 0 20px #74b92955,0 0 14px #80c63e66; background:radial-gradient(circle at 20% 25%,#b6ed7e55 0 2px,transparent 12px),radial-gradient(circle at 79% 75%,#85c83e55 0 3px,transparent 16px); }
-.upload-preview[data-frame-style="mythic"]::after { border-color:#f4e1c8; box-shadow:inset 0 0 24px #fff1da44,0 0 18px #e4c9a777; background:linear-gradient(120deg,transparent 30%,#fff5e955 48%,transparent 62%); }
-@keyframes vfx-blood { to { background-position:8px 12px,-7px 9px,10px -8px; } }
-@keyframes vfx-water { to { background-position:0 80px; } }
-@keyframes vfx-lightning { 0%,86%,90%,100% { opacity:.65; } 88%,92% { opacity:1; } }
-@keyframes vfx-angel { 0%,18%,78%,100% { opacity:.35; } 45%,60% { opacity:.9; } }
-@keyframes vfx-venom { to { background-position:14px -10px,-12px 9px; } }
-@keyframes vfx-mythic { to { background-position:-220% 0; } }
-@media (prefers-reduced-motion:reduce) { .memory-card,.memory-card__visual::after { animation:none!important;transition:none!important; } }
+@media (prefers-reduced-motion:reduce) { .memory-card { animation:none!important;transition:none!important; } }
 
 .loading-screen__mark img,.brand__mark img { mix-blend-mode:normal; }
 .brand__mark img { border-radius:50%;object-fit:cover; }

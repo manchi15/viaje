@@ -28,4 +28,14 @@ Las 16 ilustraciones iniciales están en `public/images/collectibles/` como `fig
 
 ## GitHub Pages
 
-El despliegue usa `.github/workflows/deploy.yml`. GitHub Pages debe tener **GitHub Actions** como origen y las variables `VITE_SUPABASE_URL` y `VITE_SUPABASE_PUBLISHABLE_KEY` configuradas en **Settings → Secrets and variables → Actions → Variables**.
+El despliegue usa `.github/workflows/deploy.yml`. En **Settings → Pages**, selecciona **GitHub Actions** como origen. Agrega `VITE_SUPABASE_URL` y `VITE_SUPABASE_PUBLISHABLE_KEY` en **Settings → Secrets and variables → Actions**, ya sea como variables o como secretos (el flujo acepta ambos).
+
+Para subir el proyecto, usa Git desde la carpeta del proyecto; no arrastres `node_modules` ni `dist` a la página web de GitHub. Esas carpetas se generan localmente y están excluidas por `.gitignore`. En una terminal:
+
+```sh
+git add .
+git commit -m "Preparar sitio para GitHub Pages"
+git push origin main
+```
+
+El botón **Actions** permite revisar el resultado del flujo **Deploy NEXORA to GitHub Pages**. Si también aparece **pages build and deployment**, cambia el origen de Pages a **GitHub Actions** para que no se intente publicar desde la rama a la vez.

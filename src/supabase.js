@@ -58,14 +58,16 @@ async function accessToken() {
 async function request(path, { method = 'GET', body, headers = {}, auth = true, raw = false } = {}) {
   if (!isSupabaseConfigured) throw new Error('Configura VITE_SUPABASE_URL y VITE_SUPABASE_PUBLISHABLE_KEY para conectar NEXORA.');
   const token = auth ? await accessToken() : null;
+  const jsonBody = body != null && !(body instanceof Blob);
   const response = await fetch(`${API_URL}${path}`, {
     method,
     headers: {
       apikey: API_KEY,
+      ...(jsonBody ? { 'Content-Type': 'application/json' } : {}),
       ...headers,
       Authorization: `Bearer ${token || API_KEY}`,
     },
-    body: body == null ? undefined : body instanceof Blob ? body : JSON.stringify(body),
+    body: body == null ? undefined : jsonBody ? JSON.stringify(body) : body,
   });
   if (raw && response.ok) return response;
   const payload = await response.json().catch(() => ({}));
@@ -128,8 +130,11 @@ export function updateRows(table, query, value) {
   return request(`/rest/v1/${encodeURIComponent(table)}?${query}`, { method: 'PATCH', body: value, headers: { Prefer: 'return=representation' } });
 }
 
-export function deleteRows(table, query) {
-  return request(`/rest/v1/${encodeURIComponent(table)}?${query}`, { method: 'DELETE', headers: { Prefer: 'return=minimal' } });
+export function deleteRows(table, query, { returning = 'minimal' } = {}) {
+  return request(`/rest/v1/${encodeURIComponent(table)}?${query}`, {
+    method: 'DELETE',
+    headers: { Prefer: `return=${returning}` },
+  });
 }
 
 export function callRpc(name, args = {}) {
