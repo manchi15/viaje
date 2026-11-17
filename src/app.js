@@ -27,6 +27,7 @@ const ownedCollectibleCatalog = document.querySelector('#ownedCollectibleCatalog
 const ownedCollectibleCount = document.querySelector('#ownedCollectibleCount');
 const ownedCollectiblesStatus = document.querySelector('#ownedCollectiblesStatus');
 const profileDisplayName = document.querySelector('#profileDisplayName');
+const profileAdminBadge = document.querySelector('#profileAdminBadge');
 const profileNameInput = document.querySelector('#profileName');
 const profileNameSaveButton = document.querySelector('#profileNameSaveButton');
 const profileNameStatus = document.querySelector('#profileNameStatus');
@@ -35,6 +36,17 @@ const profileAvatarFallback = document.querySelector('#profileAvatarFallback');
 const profilePhotoInput = document.querySelector('#profilePhotoInput');
 const profilePhotoButton = document.querySelector('#profilePhotoButton');
 const profilePhotoStatus = document.querySelector('#profilePhotoStatus');
+const profileCropPanel = document.querySelector('#profileCropPanel');
+const profileCropPreview = document.querySelector('#profileCropPreview');
+const profileCropZoom = document.querySelector('#profileCropZoom');
+const profileCropZoomValue = document.querySelector('#profileCropZoomValue');
+const profileCropCancel = document.querySelector('#profileCropCancel');
+const profileCropSave = document.querySelector('#profileCropSave');
+const profileAccountReference = document.querySelector('#profileAccountReference');
+const profileAccountId = document.querySelector('#profileAccountId');
+const copyProfileAccountId = document.querySelector('#copyProfileAccountId');
+const onlineStatus = document.querySelector('#onlineStatus');
+const onlineCount = document.querySelector('#onlineCount');
 const rouletteTitleInput = document.querySelector('#rouletteTitleInput');
 const rouletteTitleHeading = document.querySelector('#rouletteTitle');
 const rouletteParticipants = document.querySelector('#rouletteParticipants');
@@ -70,6 +82,10 @@ let purchasePending = false;
 let deletingPhotoId = '';
 let profileAvatarPath = '';
 let profilePhotoPending = false;
+let profileCropFile = null;
+let profileCropUrl = '';
+let onlinePresenceTimer = null;
+let onlinePresencePending = false;
 let profileNamePending = false;
 let rouletteRotation = 0;
 let rouletteSpinning = false;
@@ -781,6 +797,7 @@ async function connectAccount() {
   }
   try {
     await restoreSession();
+    startOnlinePresence();
     await Promise.all([loadMarket(), loadProfile()]);
     startSharedRouletteSync();
     await Promise.all([loadPhotoLeaderboard(), loadOwnPhotos()]);
@@ -806,6 +823,8 @@ async function loadProfile() {
   profileNameInput.disabled = true;
   profileNameSaveButton.disabled = true;
   profilePhotoButton.disabled = true;
+  profileAccountReference.hidden = !user?.id;
+  if (user?.id) profileAccountId.textContent = user.id;
   if (!user?.id) {
     profileNameStatus.textContent = 'No se encontró una sesión para cargar tu perfil.';
     profilePhotoStatus.textContent = 'No se encontró una sesión para cargar tu perfil.';
@@ -828,6 +847,11 @@ async function loadProfile() {
     }
 
     profileAvatarPath = profile.avatar_path || '';
+    profileAdminBadge.hidden = true;
+    try {
+      const access = await selectRows('profiles', `select=is_admin&user_id=eq.${encodeURIComponent(user.id)}&limit=1`);
+      profileAdminBadge.hidden = access[0]?.is_admin !== true;
+    } catch { /* El rol sigue protegido por Supabase aunque no se pueda mostrar la insignia. */ }
     profileDisplayName.textContent = profile.display_name || 'Participante';
     profileNameInput.value = profile.display_name || '';
     profileNameInput.disabled = false;
@@ -917,13 +941,120 @@ function bindProfilePhoto() {
   });
   profilePhotoInput.addEventListener('change', () => {
     const file = profilePhotoInput.files?.[0];
-    if (file) uploadProfilePhoto(file);
+    if (file) prepareProfilePhoto(file);
+  });
+  profileCropZoom.addEventListener('input', updateProfileCropPreview);
+  profileCropCancel.addEventListener('click', clearProfilePhotoCrop);
+  profileCropSave.addEventListener('click', saveProfilePhotoCrop);
+  copyProfileAccountId.addEventListener('click', async () => {
+    const userId = currentUser()?.id;
+    if (!userId) return;
+    try {
+      await navigator.clipboard.writeText(userId);
+      copyProfileAccountId.textContent = '¡Copiado!';
+      window.setTimeout(() => { copyProfileAccountId.textContent = 'Copiar ID'; }, 1800);
+    } catch {
+      profilePhotoStatus.textContent = 'No pude copiarlo automáticamente. Selecciona el ID de arriba y cópialo.';
+    }
+  });
+  onlineStatus.addEventListener('click', refreshOnlineCount);
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) refreshOnlineCount();
   });
   profileAvatarImage.addEventListener('error', () => {
     profileAvatarImage.hidden = true;
     profileAvatarFallback.hidden = false;
     profilePhotoStatus.textContent = 'No se pudo mostrar la foto guardada. Puedes elegir otra para reemplazarla.';
   });
+}
+
+function startOnlinePresence() {
+  if (onlinePresenceTimer) return;
+  refreshOnlineCount();
+  onlinePresenceTimer = window.setInterval(refreshOnlineCount, 20_000);
+}
+
+async function refreshOnlineCount() {
+  if (!currentUser()?.id || onlinePresencePending) return;
+  onlinePresencePending = true;
+  onlineStatus.disabled = true;
+  try {
+    const count = Number(await callRpc('nexora_ping_presence'));
+    onlineCount.textContent = Number.isFinite(count) ? String(count) : '—';
+    onlineStatus.title = `${onlineCount.textContent} ${count === 1 ? 'persona conectada' : 'personas conectadas'}`;
+    onlineStatus.setAttribute('aria-label', `Actualizar personas conectadas. Ahora hay ${onlineCount.textContent}.`);
+  } catch {
+    onlineCount.textContent = '—';
+    onlineStatus.title = 'Aplica la migración de presencia en Supabase para activar el contador.';
+    onlineStatus.setAttribute('aria-label', 'Contador no disponible. Revisa la migración de presencia en Supabase.');
+  } finally {
+    onlinePresencePending = false;
+    onlineStatus.disabled = false;
+  }
+}
+
+function prepareProfilePhoto(file) {
+  const allowedTypes = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
+  if (!allowedTypes.has(file.type)) {
+    profilePhotoStatus.textContent = 'Elige una imagen JPG, PNG, WebP o GIF.';
+    profilePhotoInput.value = '';
+    return;
+  }
+  if (file.size > 8 * 1024 * 1024) {
+    profilePhotoStatus.textContent = 'La foto de perfil debe pesar 8 MB o menos.';
+    profilePhotoInput.value = '';
+    return;
+  }
+  if (profileCropUrl) URL.revokeObjectURL(profileCropUrl);
+  profileCropFile = file;
+  profileCropUrl = URL.createObjectURL(file);
+  profileCropPreview.src = profileCropUrl;
+  profileCropZoom.value = '100';
+  updateProfileCropPreview();
+  profileCropPanel.hidden = false;
+  profilePhotoStatus.textContent = 'Ajusta el zoom y guarda para subir tu foto.';
+}
+
+function updateProfileCropPreview() {
+  const zoom = Number(profileCropZoom.value) / 100;
+  profileCropPreview.style.transform = `scale(${zoom})`;
+  profileCropZoomValue.value = `${profileCropZoom.value}%`;
+  profileCropZoomValue.textContent = `${profileCropZoom.value}%`;
+}
+
+function clearProfilePhotoCrop() {
+  profileCropPanel.hidden = true;
+  profileCropPreview.removeAttribute('src');
+  profileCropFile = null;
+  if (profileCropUrl) URL.revokeObjectURL(profileCropUrl);
+  profileCropUrl = '';
+  profilePhotoInput.value = '';
+}
+
+async function saveProfilePhotoCrop() {
+  if (!profileCropFile || profilePhotoPending) return;
+  profileCropSave.disabled = true;
+  profileCropCancel.disabled = true;
+  profilePhotoStatus.textContent = 'Preparando el recorte…';
+  try {
+    const bitmap = await createImageBitmap(profileCropFile);
+    const side = Math.min(bitmap.width, bitmap.height) / (Number(profileCropZoom.value) / 100);
+    const canvas = document.createElement('canvas');
+    canvas.width = 512;
+    canvas.height = 512;
+    const context = canvas.getContext('2d');
+    if (!context) throw new Error('No se pudo preparar la imagen en este navegador.');
+    context.drawImage(bitmap, (bitmap.width - side) / 2, (bitmap.height - side) / 2, side, side, 0, 0, 512, 512);
+    bitmap.close();
+    const blob = await new Promise((resolve, reject) => canvas.toBlob((result) => result ? resolve(result) : reject(new Error('No se pudo generar el recorte.')), 'image/jpeg', 0.88));
+    const croppedFile = new File([blob], 'avatar.jpg', { type: 'image/jpeg' });
+    await uploadProfilePhoto(croppedFile);
+  } catch (error) {
+    profilePhotoStatus.textContent = `No se pudo preparar la foto: ${error.message}`;
+  } finally {
+    profileCropSave.disabled = false;
+    profileCropCancel.disabled = false;
+  }
 }
 
 async function uploadProfilePhoto(file) {
@@ -982,6 +1113,7 @@ async function uploadProfilePhoto(file) {
       }
     }
     profilePhotoStatus.textContent = `Foto de perfil actualizada.${cleanupMessage}`;
+    clearProfilePhotoCrop();
   } catch (error) {
     let cleanupMessage = '';
     if (uploaded) {

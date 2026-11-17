@@ -136,5 +136,6 @@ body {
 .loading-screen__mark img,.brand__mark img { mix-blend-mode:normal; }
 .brand__mark img { border-radius:50%;object-fit:cover; }
 .auth-logo { object-fit:cover; }
+
 .home-photo-feature > .home-photo-backdrop { filter:brightness(.7) saturate(.82); }
 .home-photo-empty { background:linear-gradient(180deg,rgba(16,13,14,.12),rgba(16,13,14,.78)); }

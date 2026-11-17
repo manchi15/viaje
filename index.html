@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#100D0E" />
     <meta name="description" content="El álbum privado del viaje de amigos a Melgar, Colombia." />
-    <link rel="icon" type="image/jpeg" />
+    <link rel="icon" type="image/jpeg" href="%BASE_URL%images/logo-nexora/logo.jpg" />
+    <link rel="apple-touch-icon" href="%BASE_URL%images/logo-nexora/logo.jpg" />
     <link rel="stylesheet" href="./src/app.css" />
     <link rel="stylesheet" href="./src/vfx.css" />
     <title>NEXORA · Melgar 2026</title>
@@ -19,6 +20,9 @@
       <div class="header-tools">
         <button id="themeToggle" class="theme-toggle" type="button" aria-label="Cambiar a modo claro" aria-pressed="true">
           <span aria-hidden="true">☀</span>
+        </button>
+        <button id="onlineStatus" class="online-status" type="button" aria-label="Actualizar personas conectadas">
+          <span class="online-status-dot" aria-hidden="true"></span><span>EN LÍNEA</span><strong id="onlineCount">—</strong>
         </button>
         <span class="private-badge"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2"></rect><path d="M8 10V7a4 4 0 0 1 8 0v3"></path></svg> ÁLBUM PRIVADO</span>
       </div>
@@ -226,7 +230,7 @@
               <img id="profileAvatarImage" alt="Foto de perfil" hidden />
               <span id="profileAvatarFallback" aria-hidden="true">◎</span>
             </div>
-            <div class="profile-identity"><p class="eyebrow">PERFIL DE INVITADO</p><h2 id="profileDisplayName">Cargando tu perfil…</h2><p class="phase-note">Tu identidad se guarda automáticamente en este dispositivo.</p></div>
+            <div class="profile-identity"><p class="eyebrow">PERFIL DE INVITADO</p><h2 id="profileDisplayName">Cargando tu perfil…</h2><span id="profileAdminBadge" class="profile-admin-badge" hidden>ADMINISTRADOR</span><p class="phase-note">Tu identidad se guarda automáticamente en este dispositivo.</p></div>
             <div class="profile-stats">
               <div><strong>—</strong><span>FOTOS</span></div>
               <div><strong>—</strong><span>NEXACOINS</span></div>
@@ -241,7 +245,22 @@
             <label class="field-label" for="profileDescription">Descripción</label><textarea id="profileDescription" class="form-control" rows="3" placeholder="Cuéntales algo de ti" disabled></textarea>
             <input id="profilePhotoInput" class="visually-hidden" type="file" accept="image/jpeg,image/png,image/webp,image/gif" />
             <button id="profilePhotoButton" class="file-picker profile-photo-button" type="button" disabled>Elegir foto de perfil</button>
+            <div id="profileCropPanel" class="profile-crop-panel" hidden>
+              <p class="phase-note">Ajusta el zoom para encuadrar tu foto.</p>
+              <div class="profile-crop-window"><img id="profileCropPreview" alt="Vista previa del recorte de perfil" /></div>
+              <label class="field-label" for="profileCropZoom">Tamaño de la foto <output id="profileCropZoomValue" for="profileCropZoom">100%</output></label>
+              <input id="profileCropZoom" class="profile-crop-zoom" type="range" min="100" max="300" step="1" value="100" />
+              <div class="profile-crop-actions">
+                <button id="profileCropCancel" class="file-picker" type="button">Cancelar</button>
+                <button id="profileCropSave" class="frame-buy-button" type="button">Guardar foto</button>
+              </div>
+            </div>
             <p id="profilePhotoStatus" class="phase-note profile-photo-status" role="status" aria-live="polite">Conectando tu perfil…</p>
+            <div id="profileAccountReference" class="profile-account-reference" hidden>
+              <span class="phase-note">ID de tu cuenta (envíamelo para activar administrador):</span>
+              <code id="profileAccountId"></code>
+              <button id="copyProfileAccountId" class="file-picker" type="button">Copiar ID</button>
+            </div>
             <p class="phase-note">Puedes cambiar tu nombre visible y foto cuando quieras. El nombre no otorga permisos de administrador; la descripción estará disponible más adelante.</p>
           </section>
           <section class="profile-posts" aria-label="Publicaciones del perfil">
