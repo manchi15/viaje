@@ -615,8 +615,9 @@ body[data-theme="dark"] .private-badge {
   .profile-posts { grid-column: 1; }
 }
 @media (max-width: 390px) {
-  .private-badge { gap: 5px; padding: 7px; font-size: .46rem; }
-  .private-badge svg { width: 12px; }
+  .header-tools { gap: 7px; }
+  .online-status { gap: 5px; padding: 7px 8px; font-size: .56rem; }
+  .private-badge { display: none; }
   .home-rail { grid-template-columns: 1fr; }
   .rail-profile, .rail-footer { grid-column: auto; }
   .welcome-panel { align-items: start; flex-direction: column; gap: 12px; }

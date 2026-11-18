@@ -65,9 +65,10 @@ const ROULETTE_SPIN_DURATION_MS = 4300;
 const ROULETTE_COOLDOWN_MS = 8000;
 const ROULETTE_RESULT_DISPLAY_MS = 2200;
 const rewardCountdown = document.querySelector('#coinRewardCountdown');
+const baseUrl = import.meta.env?.BASE_URL || './';
 const logoPath = location.protocol === 'file:'
   ? './public/images/logo-nexora/logo.jpg'
-  : `${import.meta.env.BASE_URL}images/logo-nexora/logo.jpg`;
+  : `${baseUrl}images/logo-nexora/logo.jpg`;
 const THEME_KEY = 'nexora-theme';
 let previewUrl = '';
 let marketItems = [];
@@ -124,7 +125,7 @@ document.querySelectorAll('.brand img, .feed-avatar, .rail-avatar').forEach((ima
   image.src = logoPath;
 });
 const creatorPhoto = document.querySelector('#creatorPhoto');
-if (creatorPhoto) creatorPhoto.src = `${import.meta.env.BASE_URL}images/nosotros/foto/foto.jpg`;
+if (creatorPhoto) creatorPhoto.src = `${baseUrl}images/nosotros/foto/foto.jpg`;
 document.querySelector('link[rel="icon"]').href = logoPath;
 if (location.protocol === 'file:') {
   document.querySelector('#localFileNotice').hidden = false;
@@ -301,7 +302,7 @@ function renderCollectibles() {
     image.addEventListener('error', () => {
       filename.textContent = `Añade ${item.slug}.jpg`;
     }, { once: true });
-    image.src = `${import.meta.env.BASE_URL}images/collectibles/${encodeURIComponent(item.slug)}.jpg`;
+    image.src = `${baseUrl}images/collectibles/${encodeURIComponent(item.slug)}.jpg`;
     art.append(placeholder, image);
 
     const details = document.createElement('div');
@@ -362,7 +363,7 @@ function renderOwnedCollectibles() {
     image.alt = item.name;
     image.loading = 'eager';
     image.decoding = 'async';
-    image.src = `${import.meta.env.BASE_URL}images/collectibles/${encodeURIComponent(item.slug)}.jpg`;
+    image.src = `${baseUrl}images/collectibles/${encodeURIComponent(item.slug)}.jpg`;
     art.append(image);
 
     const details = document.createElement('div');
