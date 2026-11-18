@@ -1,6 +1,6 @@
 import { callRpc, currentUser, selectRows } from './supabase.js';
 
-const baseUrl = import.meta.env?.BASE_URL || './';
+const baseUrl = import.meta.env?.BASE_URL || './public/';
 
 const sellerLines = {
   entrance: ['Vaya, vaya... tenemos un nuevo visitante.', 'Piezas únicas para historias que merecen quedarse.', 'Pasa. Siempre hay algo especial esperando.'],

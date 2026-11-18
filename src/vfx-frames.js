@@ -1,6 +1,6 @@
 const styles = new Set(['blood', 'ocean', 'lightning', 'angel', 'venom', 'mythic']);
 const observedFrames = new WeakSet();
-const baseUrl = import.meta.env?.BASE_URL || './';
+const baseUrl = import.meta.env?.BASE_URL || './public/';
 let observer;
 
 function normalizeStyle(value) {

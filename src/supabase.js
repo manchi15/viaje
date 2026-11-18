@@ -1,6 +1,11 @@
 const env = import.meta.env || {};
-const API_URL = String(env.VITE_SUPABASE_URL || '').replace(/\/+$/, '');
-const API_KEY = env.VITE_SUPABASE_PUBLISHABLE_KEY || env.VITE_SUPABASE_ANON_KEY || '';
+// These are public browser credentials (the publishable key is safe to expose).
+// Keep the .env overrides for local development and compiled deployments, while
+// allowing GitHub's direct branch publishing to connect without Vite injection.
+const DEFAULT_SUPABASE_URL = 'https://vzmlftmtsycmzufcuzbz.supabase.co';
+const DEFAULT_SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_YDQ6KsU23ds5di7cT4SGtQ_HT-xPybW';
+const API_URL = String(env.VITE_SUPABASE_URL || DEFAULT_SUPABASE_URL).replace(/\/+$/, '');
+const API_KEY = env.VITE_SUPABASE_PUBLISHABLE_KEY || env.VITE_SUPABASE_ANON_KEY || DEFAULT_SUPABASE_PUBLISHABLE_KEY;
 const SESSION_KEY = 'nexora-auth-session-v1';
 const BUCKET = 'nexora-photos';
 

@@ -65,7 +65,8 @@ const ROULETTE_SPIN_DURATION_MS = 4300;
 const ROULETTE_COOLDOWN_MS = 8000;
 const ROULETTE_RESULT_DISPLAY_MS = 2200;
 const rewardCountdown = document.querySelector('#coinRewardCountdown');
-const baseUrl = import.meta.env?.BASE_URL || './';
+// A Vite build serves public assets from BASE_URL; raw GitHub uploads keep them under /public.
+const baseUrl = import.meta.env?.BASE_URL || './public/';
 const logoPath = location.protocol === 'file:'
   ? './public/images/logo-nexora/logo.jpg'
   : `${baseUrl}images/logo-nexora/logo.jpg`;
@@ -124,6 +125,7 @@ document.querySelector('#themeToggle')?.addEventListener('click', () => {
 document.querySelectorAll('.brand img, .feed-avatar, .rail-avatar').forEach((image) => {
   image.src = logoPath;
 });
+document.querySelector('link[rel="apple-touch-icon"]')?.setAttribute('href', logoPath);
 const creatorPhoto = document.querySelector('#creatorPhoto');
 if (creatorPhoto) creatorPhoto.src = `${baseUrl}images/nosotros/foto/foto.jpg`;
 document.querySelector('link[rel="icon"]').href = logoPath;
