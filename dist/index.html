@@ -8,8 +8,8 @@
     <link rel="icon" type="image/jpeg" href="/viaje/images/logo-nexora/logo.jpg" />
     <link rel="apple-touch-icon" href="/viaje/images/logo-nexora/logo.jpg" />
     <title>NEXORA · Melgar 2026</title>
-    <script type="module" crossorigin src="/viaje/assets/index-lgRjEVuI.js"></script>
-    <link rel="stylesheet" crossorigin href="/viaje/assets/index-CapE6hjF.css">
+    <script type="module" crossorigin src="/viaje/assets/index-BvvGN_W8.js"></script>
+    <link rel="stylesheet" crossorigin href="/viaje/assets/index-D9QzmVhx.css">
   </head>
   <body data-theme="dark">
     <header class="topbar">
@@ -76,6 +76,7 @@
                 <button class="feed-cta" type="button" data-open-screen="subir">Compartir una foto <span aria-hidden="true">→</span></button>
               </div>
             </article>
+            <div id="homeFeedList" class="home-feed-list" aria-live="polite" aria-label="Publicaciones recientes del grupo"></div>
           </div>
 
           <aside class="home-rail" aria-label="Resumen del viaje">
@@ -264,8 +265,11 @@
             <p class="phase-note">Puedes cambiar tu nombre visible y foto cuando quieras. El nombre no otorga permisos de administrador; la descripción estará disponible más adelante.</p>
           </section>
           <section id="adminPanel" class="surface admin-panel" aria-labelledby="adminPanelTitle" hidden>
-            <p class="eyebrow">PANEL DE ADMINISTRACIÓN</p>
-            <h2 id="adminPanelTitle">Revisar fotos</h2>
+            <div class="admin-panel-header">
+              <div><p class="eyebrow">PANEL DE ADMINISTRACIÓN</p><h2 id="adminPanelTitle">Revisar fotos</h2></div>
+              <span id="adminReviewCount" class="admin-review-count" aria-label="Fotos pendientes">0</span>
+              <button id="adminReviewRefresh" class="admin-refresh-button" type="button" aria-label="Actualizar fotos pendientes">Actualizar</button>
+            </div>
             <p id="adminReviewStatus" class="phase-note" role="status" aria-live="polite">Cargando publicaciones pendientes…</p>
             <div id="adminReviewQueue" class="admin-review-queue" aria-live="polite"></div>
           </section>
