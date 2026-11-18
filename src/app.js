@@ -40,6 +40,7 @@ const adminPanel = document.querySelector('#adminPanel');
 const adminReviewStatus = document.querySelector('#adminReviewStatus');
 const adminReviewQueue = document.querySelector('#adminReviewQueue');
 const adminReviewRefresh = document.querySelector('#adminReviewRefresh');
+const adminReviewCount = document.querySelector('#adminReviewCount');
 const profileCropPanel = document.querySelector('#profileCropPanel');
 const profileCropPreview = document.querySelector('#profileCropPreview');
 const profileCropZoom = document.querySelector('#profileCropZoom');
@@ -69,6 +70,8 @@ const ROULETTE_SPIN_DURATION_MS = 4300;
 const ROULETTE_COOLDOWN_MS = 8000;
 const ROULETTE_RESULT_DISPLAY_MS = 2200;
 const rewardCountdown = document.querySelector('#coinRewardCountdown');
+const homeFeedList = document.querySelector('#homeFeedList');
+const homeFeedEmpty = document.querySelector('.feed-column > .feed-card');
 // A Vite build serves public assets from BASE_URL; raw GitHub uploads keep them under /public.
 const baseUrl = import.meta.env?.BASE_URL || './public/';
 const logoPath = location.protocol === 'file:'
@@ -844,12 +847,72 @@ async function connectAccount() {
     loadProfile().catch((error) => { profileNameStatus.textContent = `No se pudo cargar tu perfil: ${error.message}`; }),
     loadPhotoLeaderboard().catch((error) => { photoLeaderboardStatus.textContent = `No se pudo cargar la tabla: ${error.message}`; }),
     loadOwnPhotos().catch((error) => { ownPhotosStatus.textContent = `No se pudieron cargar tus fotos: ${error.message}`; }),
+    loadHomeFeed(),
   ]);
+  window.setInterval(() => { if (!document.hidden) loadHomeFeed(); }, 30_000);
   try {
     await claimCoinReward();
     window.setInterval(updateCoinReward, 1000);
   } catch (error) {
     setRewardCountdown(rewardErrorMessage(error));
+  }
+}
+
+async function loadHomeFeed() {
+  if (!homeFeedList || !currentUser()?.id) return;
+  try {
+    const rows = (await selectRows('memories', 'select=id,user_id,storage_path,caption,status,created_at&media_type=eq.image&order=created_at.desc&limit=40'))
+      .filter((row) => row.status === 'approved' || (row.status === 'pending' && row.user_id === currentUser()?.id));
+    if (!rows.length) {
+      homeFeedList.replaceChildren();
+      homeFeedEmpty.hidden = false;
+      return;
+    }
+    const people = await selectRows('trip_participants', 'select=user_id,display_name,avatar_path');
+    const signed = await signedObjectUrls(rows.map((row) => row.storage_path));
+    const peopleById = new Map(people.map((person) => [person.user_id, person]));
+    const urls = new Map(signed.map((entry) => [entry.path, entry.signedURL]));
+    const cards = rows.flatMap((row) => {
+      const imageUrl = urls.get(row.storage_path);
+      if (!imageUrl) return [];
+      const author = peopleById.get(row.user_id);
+      const card = document.createElement('article');
+      card.className = 'surface feed-card feed-post';
+      const header = document.createElement('div');
+      header.className = 'feed-card-header';
+      const avatar = document.createElement('img');
+      avatar.className = 'feed-avatar';
+      avatar.alt = '';
+      avatar.src = author?.avatar_path ? urls.get(author.avatar_path) || logoPath : logoPath;
+      const authorBlock = document.createElement('div');
+      const name = document.createElement('strong');
+      name.textContent = author?.display_name || 'Participante';
+      const meta = document.createElement('small');
+      const date = new Date(row.created_at);
+      meta.textContent = Number.isNaN(date.getTime()) ? 'NEXORA · MELGAR' : new Intl.DateTimeFormat('es-CO', { dateStyle: 'medium', timeStyle: 'short' }).format(date);
+      authorBlock.append(name, meta);
+      const privacy = document.createElement('span');
+      privacy.className = `feed-post-status${row.status === 'pending' ? ' is-pending' : ''}`;
+      privacy.textContent = row.status === 'pending' ? 'En revisión' : 'Del grupo';
+      header.append(avatar, authorBlock, privacy);
+      const image = document.createElement('img');
+      image.className = 'feed-post-image';
+      image.src = imageUrl;
+      image.alt = row.caption || `Foto compartida por ${author?.display_name || 'un participante'}`;
+      image.loading = 'lazy';
+      image.decoding = 'async';
+      const body = document.createElement('div');
+      body.className = 'feed-post-caption';
+      const caption = document.createElement('p');
+      caption.textContent = row.caption || 'Un recuerdo de Melgar.';
+      body.append(caption);
+      card.append(header, image, body);
+      return [card];
+    });
+    homeFeedList.replaceChildren(...cards);
+    homeFeedEmpty.hidden = cards.length > 0;
+  } catch (error) {
+    console.error('No se pudo actualizar el feed de NEXORA.', error);
   }
 }
 
@@ -935,6 +998,7 @@ async function loadProfile() {
 async function loadAdminReviewQueue() {
   if (!adminReviewQueue || !adminReviewStatus || !currentUser()) return;
   adminReviewStatus.textContent = 'Cargando fotos pendientes…';
+  if (adminReviewCount) adminReviewCount.textContent = '0';
   adminReviewQueue.replaceChildren();
   try {
     const rows = await selectRows('memories', 'select=id,user_id,storage_path,caption,created_at&status=eq.pending&media_type=eq.image&order=created_at.asc&limit=50');
@@ -942,6 +1006,7 @@ async function loadAdminReviewQueue() {
       adminReviewStatus.textContent = 'No hay fotos pendientes de revisión.';
       return;
     }
+    if (adminReviewCount) adminReviewCount.textContent = String(rows.length);
     const [people, signed] = await Promise.all([
       selectRows('trip_participants', 'select=user_id,display_name'),
       signedObjectUrls(rows.map((row) => row.storage_path)),
@@ -972,7 +1037,7 @@ async function loadAdminReviewQueue() {
           try {
             await callRpc('nexora_review_memory', { p_memory_id: row.id, p_approved: approved });
             await loadAdminReviewQueue();
-            if (approved) await loadPhotoLeaderboard();
+            if (approved) await Promise.all([loadPhotoLeaderboard(), loadHomeFeed()]);
           } catch (error) {
             adminReviewStatus.textContent = `No se pudo ${approved ? 'aprobar' : 'rechazar'} la foto: ${error.message}`;
             button.disabled = false;
@@ -1583,7 +1648,7 @@ async function publishPhoto(event) {
     document.querySelector('#fileLabel').textContent = 'Elegir fotografía';
     renderPhotoPreview();
     uploadStatus.textContent = 'Foto enviada para revisión. El marco quedará guardado con tu recuerdo.';
-    await Promise.all([loadPhotoLeaderboard(), loadOwnPhotos()]);
+    await Promise.all([loadPhotoLeaderboard(), loadOwnPhotos(), loadHomeFeed()]);
   } catch (error) {
     let cleanupError = '';
     if (uploaded) {

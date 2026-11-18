@@ -544,7 +544,7 @@ body[data-theme="dark"] .private-badge {
 .admin-panel { grid-column: 1 / -1; padding: 22px; }
 .admin-panel[hidden] { display: none; }
 .admin-panel { border-color: rgba(215,183,126,.25); background: linear-gradient(145deg,rgba(30,25,25,.98),rgba(19,16,17,.98)); box-shadow: 0 20px 55px rgba(0,0,0,.2), inset 0 1px rgba(255,255,255,.045); }
-.admin-panel-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+.admin-panel-header { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
 .admin-panel h2 { margin: 0; color: var(--cream); font-family: Georgia,serif; font-size: 1.5rem; font-weight: 400; }
 .admin-panel .eyebrow { margin: 0 0 5px; color: #c6a879; font-size: .58rem; letter-spacing: .15em; }
 .admin-panel > .phase-note { margin-bottom: 14px; }
@@ -559,6 +559,21 @@ body[data-theme="dark"] .private-badge {
 .admin-review-actions { display: flex; gap: 8px; }
 .admin-review-actions button { min-height: 44px; flex: 1; border-radius: 10px; }
 .admin-review-actions button:last-child { border: 1px solid rgba(226,130,130,.28); background: rgba(145,57,64,.14); color: #f0b0ae; box-shadow: none; }
+.admin-panel-header > div { min-width: 0; flex: 1; }
+.admin-review-count { display: grid; width: 30px; height: 30px; flex: none; place-items: center; border: 1px solid rgba(215,183,126,.28); border-radius: 50%; background: rgba(215,183,126,.1); color: #ead5ac; font-size: .68rem; font-weight: 750; font-variant-numeric: tabular-nums; }
+.admin-panel-header::after { position: absolute; top: -7px; right: 2px; width: 5px; height: 5px; border-radius: 50%; background: #dfc48f; box-shadow: 0 0 13px 3px rgba(223,196,143,.35); content: ''; pointer-events: none; }
+.admin-review-card { transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease; }
+.admin-review-card:hover { transform: translateY(-2px); border-color: rgba(215,183,126,.28); box-shadow: 0 15px 32px rgba(0,0,0,.25); }
+.admin-review-actions button:active { transform: scale(.97); }
+.home-feed-list { display: grid; gap: 17px; }
+.feed-post { overflow: hidden; border-color: rgba(255,255,255,.09); background: #171314; }
+.feed-post .feed-card-header { min-height: 66px; }
+.feed-post .feed-avatar { width: 38px; height: 38px; border: 1px solid rgba(231,201,142,.45); }
+.feed-post-status { flex: none; padding: 6px 9px; border: 1px solid rgba(120,174,137,.22); border-radius: 999px; background: rgba(95,151,113,.1); color: #a7d0b1; font-size: .58rem; font-weight: 700; letter-spacing: .04em; }
+.feed-post-status.is-pending { border-color: rgba(215,183,126,.23); background: rgba(215,183,126,.09); color: #e5c894; }
+.feed-post-image { display: block; width: 100%; height: auto; max-height: min(78vh,780px); background: #0e0c0d; object-fit: contain; }
+.feed-post-caption { padding: 14px 17px 17px; }
+.feed-post-caption p { margin: 0; color: #eee5e0; font-size: .83rem; line-height: 1.55; overflow-wrap: anywhere; }
 .phase-note.status-error { padding: 11px 13px; border: 1px solid rgba(230,110,110,.32); border-radius: 11px; background: rgba(150,42,49,.12); color: #f0b1ad; }
 .phase-note.status-success { color: #9dccab; }
 .phase-note.status-loading { color: #d4bd91; }
@@ -1030,6 +1045,10 @@ body.roulette-spotlight-open { overflow: hidden; }
   .admin-review-card > div { align-content: center; gap: 8px; padding: 11px; }
   .admin-review-actions { gap: 6px; }
   .admin-review-actions button { min-height: 42px; padding-inline: 5px; font-size: .66rem; }
+  .home-feed-list { gap: 14px; }
+  .feed-post .feed-card-header { min-height: 62px; padding-inline: 13px; }
+  .feed-post-image { max-height: 74vh; }
+  .feed-post-caption { padding: 12px 14px 15px; }
   .upload-layout { gap: 14px; padding: 14px; border-radius: 18px; }
   .upload-controls { gap: 10px; }
   .photo-preview { min-height: 190px; border-radius: 14px; }
