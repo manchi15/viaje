@@ -1,0 +1,40 @@
+# Dependencies and generated builds
+node_modules/
+dist/
+.vite/
+coverage/
+
+# Environment files and secrets
+.env
+.env.*
+!.env.example
+!.env.*.example
+certs/*.pem
+*.key
+*.p12
+*.pfx
+
+# Caches and temporary files
+.cache/
+.parcel-cache/
+.turbo/
+tmp/
+temp/
+*.tmp
+*.temp
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Operating system and editor files
+.DS_Store
+._*
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
