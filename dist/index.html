@@ -5,12 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#100D0E" />
     <meta name="description" content="El álbum privado del viaje de amigos a Melgar, Colombia." />
-    <link rel="icon" type="image/jpeg" />
+    <link rel="icon" type="image/jpeg" href="/viaje/images/logo-nexora/logo.jpg" />
+    <link rel="apple-touch-icon" href="/viaje/images/logo-nexora/logo.jpg" />
     <title>NEXORA · Melgar 2026</title>
-    <script type="module" crossorigin src="/viaje/assets/index-B_iez2VO.js"></script>
-    <link rel="stylesheet" crossorigin href="/viaje/assets/index-DL5io05e.css">
+    <script type="module" crossorigin src="/viaje/assets/index-lgRjEVuI.js"></script>
+    <link rel="stylesheet" crossorigin href="/viaje/assets/index-CapE6hjF.css">
   </head>
-  <body>
+  <body data-theme="dark">
     <header class="topbar">
       <a class="brand" href="#inicio" aria-label="NEXORA, inicio">
         <img alt="" />
@@ -19,6 +20,9 @@
       <div class="header-tools">
         <button id="themeToggle" class="theme-toggle" type="button" aria-label="Cambiar a modo claro" aria-pressed="true">
           <span aria-hidden="true">☀</span>
+        </button>
+        <button id="onlineStatus" class="online-status" type="button" aria-label="Actualizar personas conectadas">
+          <span class="online-status-dot" aria-hidden="true"></span><span>EN LÍNEA</span><strong id="onlineCount">—</strong>
         </button>
         <span class="private-badge"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2"></rect><path d="M8 10V7a4 4 0 0 1 8 0v3"></path></svg> ÁLBUM PRIVADO</span>
       </div>
@@ -179,12 +183,54 @@
         <p id="storeStatus" class="phase-note store-note" role="status" aria-live="polite">Conectando el mercado…</p>
       </section>
 
+      <section id="coleccionables" class="screen" aria-labelledby="collectionTitle" hidden>
+        <div class="page-heading"><p class="eyebrow">TU COLECCIÓN</p><h1 id="collectionTitle">Tus coleccionables.</h1><p class="intro-copy">Aquí aparecerán las figuritas que hayas desbloqueado en el cofre.</p></div>
+        <header class="collectibles-vault">
+          <span class="vault-chest" aria-hidden="true"><svg viewBox="0 0 48 48"><path d="M8 19h32v22H8zM6 13h36v9H6zM20 22v8h8v-8M24 13V7"></path><path d="M12 19v-3h24v3"></path></svg></span>
+          <div><p class="eyebrow">COLECCIÓN NEXORA</p><h2>Figuritas desbloqueadas</h2><p>Completa las 16 piezas de la colección.</p></div>
+          <span id="ownedCollectibleCount" class="vault-count collection-progress">0 / 16</span>
+        </header>
+        <div id="ownedCollectibleCatalog" class="collectible-catalog" aria-live="polite"></div>
+        <p id="ownedCollectiblesStatus" class="phase-note" role="status" aria-live="polite">Cargando tu colección…</p>
+        <button class="compose-button collection-store-link" type="button" data-open-screen="tienda" data-store-category="collectibles">Explorar el cofre <span aria-hidden="true">→</span></button>
+      </section>
+
+      <section id="juegos" class="screen" aria-labelledby="gamesTitle" hidden>
+        <div class="page-heading"><p class="eyebrow">MOMENTOS ENTRE AMIGOS</p><h1 id="gamesTitle">Juegos.</h1><p class="intro-copy">Ponle un título a la ruleta, escribe los nombres del grupo y deja que decida.</p></div>
+        <div class="roulette-layout">
+          <section class="surface roulette-controls" aria-labelledby="rouletteTitle">
+            <p class="eyebrow">RULETA PERSONALIZABLE</p>
+            <h2 id="rouletteTitle">Tu ruleta</h2>
+            <label class="field-label" for="rouletteTitleInput">Título de la ruleta</label>
+            <input id="rouletteTitleInput" class="form-control" maxlength="100" placeholder="Escribe el título que quieras" />
+            <label class="field-label" for="rouletteParticipants">Participantes · uno por línea</label>
+            <textarea id="rouletteParticipants" class="form-control" rows="7" maxlength="1200" placeholder="Escribe un nombre por línea"></textarea>
+            <p class="phase-note roulette-hint">El título y los nombres se comparten con el grupo al girar.</p>
+            <p id="rouletteSyncStatus" class="phase-note roulette-sync-status" role="status" aria-live="polite">Conectando la ruleta con los demás celulares…</p>
+            <button id="spinRouletteButton" class="publish-button" type="button" disabled>Girar la ruleta</button>
+            <p id="rouletteResult" class="roulette-result" role="status" aria-live="polite">Escribe al menos dos nombres distintos; los duplicados cuentan una sola vez.</p>
+          </section>
+          <section class="surface roulette-stage" aria-label="Ruleta de participantes">
+            <span class="roulette-pointer" aria-hidden="true">▼</span>
+            <div id="rouletteWheelHome" class="roulette-wheel-home">
+              <div id="rouletteWheel" class="roulette-wheel" aria-hidden="true">
+                <div id="rouletteNames" class="roulette-names"></div>
+                <span class="roulette-center">NEXORA</span>
+              </div>
+            </div>
+          </section>
+        </div>
+      </section>
+
       <section id="perfil" class="screen" aria-labelledby="profileTitle" hidden>
         <div class="page-heading"><p class="eyebrow">TU ESPACIO</p><h1 id="profileTitle">Tu perfil de viaje.</h1><p class="intro-copy">Tu nombre, tus fotos y lo que vas desbloqueando.</p></div>
         <div class="profile-layout">
           <section class="surface profile-card">
-            <div class="profile-avatar" aria-hidden="true">◎</div>
-            <div class="profile-identity"><p class="eyebrow">PERFIL DE INVITADO</p><h2>Tu perfil se creará al entrar</h2><p class="phase-note">Sin login ni registro. Supabase generará tu identidad automáticamente.</p></div>
+            <div class="profile-avatar">
+              <img id="profileAvatarImage" alt="Foto de perfil" hidden />
+              <span id="profileAvatarFallback" aria-hidden="true">◎</span>
+            </div>
+            <div class="profile-identity"><p class="eyebrow">PERFIL DE INVITADO</p><h2 id="profileDisplayName">Cargando tu perfil…</h2><span id="profileAdminBadge" class="profile-admin-badge" hidden>ADMINISTRADOR</span><p class="phase-note">Tu identidad se guarda automáticamente en este dispositivo.</p></div>
             <div class="profile-stats">
               <div><strong>—</strong><span>FOTOS</span></div>
               <div><strong>—</strong><span>NEXACOINS</span></div>
@@ -193,10 +239,35 @@
           </section>
           <section class="surface profile-editor" aria-labelledby="profileEditorTitle">
             <p class="eyebrow">PERSONALIZA TU ESPACIO</p><h2 id="profileEditorTitle">Tus datos</h2>
-            <label class="field-label" for="profileName">Nombre</label><input id="profileName" class="form-control" placeholder="Se asignará al crear tu perfil" disabled />
+            <label class="field-label" for="profileName">Nombre visible</label><input id="profileName" class="form-control" maxlength="60" autocomplete="nickname" placeholder="Nombre de tu perfil" disabled />
+            <button id="profileNameSaveButton" class="frame-buy-button profile-name-save-button" type="button" disabled>Guardar nombre</button>
+            <p id="profileNameStatus" class="phase-note profile-name-status" role="status" aria-live="polite">Conectando tu perfil…</p>
             <label class="field-label" for="profileDescription">Descripción</label><textarea id="profileDescription" class="form-control" rows="3" placeholder="Cuéntales algo de ti" disabled></textarea>
-            <button class="file-picker profile-photo-button" type="button" disabled>Elegir foto de perfil</button>
-            <p class="phase-note">La edición de perfil se habilitará al conectar Supabase.</p>
+            <input id="profilePhotoInput" class="visually-hidden" type="file" accept="image/jpeg,image/png,image/webp,image/gif" />
+            <button id="profilePhotoButton" class="file-picker profile-photo-button" type="button" disabled>Elegir foto de perfil</button>
+            <div id="profileCropPanel" class="profile-crop-panel" hidden>
+              <p class="phase-note">Ajusta el zoom para encuadrar tu foto.</p>
+              <div class="profile-crop-window"><img id="profileCropPreview" alt="Vista previa del recorte de perfil" /></div>
+              <label class="field-label" for="profileCropZoom">Tamaño de la foto <output id="profileCropZoomValue" for="profileCropZoom">100%</output></label>
+              <input id="profileCropZoom" class="profile-crop-zoom" type="range" min="100" max="300" step="1" value="100" />
+              <div class="profile-crop-actions">
+                <button id="profileCropCancel" class="file-picker" type="button">Cancelar</button>
+                <button id="profileCropSave" class="frame-buy-button" type="button">Guardar foto</button>
+              </div>
+            </div>
+            <p id="profilePhotoStatus" class="phase-note profile-photo-status" role="status" aria-live="polite">Conectando tu perfil…</p>
+            <div id="profileAccountReference" class="profile-account-reference" hidden>
+              <span class="phase-note">ID de tu cuenta (envíamelo para activar administrador):</span>
+              <code id="profileAccountId"></code>
+              <button id="copyProfileAccountId" class="file-picker" type="button">Copiar ID</button>
+            </div>
+            <p class="phase-note">Puedes cambiar tu nombre visible y foto cuando quieras. El nombre no otorga permisos de administrador; la descripción estará disponible más adelante.</p>
+          </section>
+          <section id="adminPanel" class="surface admin-panel" aria-labelledby="adminPanelTitle" hidden>
+            <p class="eyebrow">PANEL DE ADMINISTRACIÓN</p>
+            <h2 id="adminPanelTitle">Revisar fotos</h2>
+            <p id="adminReviewStatus" class="phase-note" role="status" aria-live="polite">Cargando publicaciones pendientes…</p>
+            <div id="adminReviewQueue" class="admin-review-queue" aria-live="polite"></div>
           </section>
           <section class="profile-posts" aria-label="Publicaciones del perfil">
             <div class="profile-posts-heading"><span>▦</span> PUBLICACIONES</div>
@@ -237,8 +308,18 @@
       <button type="button" data-screen="fotos"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><path d="m21 15-5-5L5 21"></path></svg><small>Fotos</small></button>
       <button type="button" class="nav-upload" data-screen="subir" aria-label="Subir una foto"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg><small>Subir</small></button>
       <button type="button" data-screen="tienda"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l1 13H4L5 8Z"></path><path d="M9 9V6a3 3 0 0 1 6 0v3"></path></svg><small>Tienda</small></button>
+      <button type="button" data-screen="coleccionables"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h16v11H4zM3 6h18v4H3zM10 10v3h4v-3M12 6V3"></path></svg><small>Coleccionables</small></button>
+      <button type="button" data-screen="juegos"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="m12 3 2.2 6.8L21 12l-6.8 2.2L12 21l-2.2-6.8L3 12l6.8-2.2z"></path></svg><small>Juegos</small></button>
       <button type="button" data-screen="perfil"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg><small>Perfil</small></button>
       <button type="button" data-screen="acerca"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5M12 8h.01"></path></svg><small>Sobre mí</small></button>
-    </nav>
+    </nav>
+    <div id="rouletteSpotlight" class="roulette-spotlight" aria-hidden="true" hidden>
+      <div class="roulette-spotlight-content">
+        <p id="rouletteSpotlightTitle" class="roulette-spotlight-title"></p>
+        <span class="roulette-pointer roulette-spotlight-pointer" aria-hidden="true">▼</span>
+        <div id="rouletteSpotlightWheelHost" class="roulette-spotlight-wheel-host"></div>
+        <p id="rouletteSpotlightResult" class="roulette-spotlight-result"></p>
+      </div>
+    </div>
   </body>
 </html>
