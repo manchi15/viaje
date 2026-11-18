@@ -14,6 +14,24 @@ set name = excluded.name,
     file_size_limit = excluded.file_size_limit,
     allowed_mime_types = excluded.allowed_mime_types;
 
+-- Older installations may have a different default or overlapping INSERT policies.
+alter table public.memories alter column status set default 'pending';
+grant insert on public.memories to authenticated;
+do $$
+declare
+  v_policy record;
+begin
+  for v_policy in
+    select policyname from pg_policies
+    where schemaname = 'public' and tablename = 'memories' and cmd in ('INSERT', 'ALL')
+  loop
+    execute format('drop policy %I on public.memories', v_policy.policyname);
+  end loop;
+end;
+$$;
+create policy "members submit own pending memories" on public.memories
+  for insert to authenticated with check (user_id = auth.uid() and status = 'pending');
+
 drop policy if exists "nexora members upload to own folder" on storage.objects;
 create policy "nexora members upload to own folder" on storage.objects
   for insert to authenticated with check (
