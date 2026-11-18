@@ -39,6 +39,7 @@ const profilePhotoStatus = document.querySelector('#profilePhotoStatus');
 const adminPanel = document.querySelector('#adminPanel');
 const adminReviewStatus = document.querySelector('#adminReviewStatus');
 const adminReviewQueue = document.querySelector('#adminReviewQueue');
+const adminReviewRefresh = document.querySelector('#adminReviewRefresh');
 const profileCropPanel = document.querySelector('#profileCropPanel');
 const profileCropPreview = document.querySelector('#profileCropPreview');
 const profileCropZoom = document.querySelector('#profileCropZoom');
@@ -115,6 +116,31 @@ function applyTheme(themeName) {
   toggle.setAttribute('aria-label', theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro');
   toggle.setAttribute('aria-pressed', String(theme === 'dark'));
   if (icon) icon.textContent = theme === 'dark' ? '☀' : '☾';
+}
+
+function friendlyError(error, context = 'la solicitud') {
+  const raw = String(error?.message || 'Error desconocido');
+  const lower = raw.toLowerCase();
+  if (lower.includes('nexora_submit_memory') || lower.includes('pgrst202')) {
+    return `Falta actualizar Supabase para publicar fotos. Ejecuta de nuevo la migración 20261128 y recarga la web. (${raw})`;
+  }
+  if (lower.includes('row-level security') || lower.includes('42501')) {
+    return `Supabase bloqueó ${context}. Verifica que la sesión esté activa y que la web y Supabase usen el mismo proyecto. (${raw})`;
+  }
+  if (lower.includes('auth_required') || error?.status === 401) return 'La sesión venció. Recarga la página y vuelve a intentarlo.';
+  if (lower.includes('uploaded_object_not_found') || lower.includes('bucket not found')) {
+    return `No se encontró la foto en el almacenamiento. Ejecuta la migración 20261128 y vuelve a probar. (${raw})`;
+  }
+  if (/failed to fetch|networkerror|load failed/i.test(raw)) return 'No hay conexión con Supabase. Revisa internet e inténtalo de nuevo.';
+  return `${context}: ${raw}`;
+}
+
+function setStatus(element, message, tone = 'info', error = null) {
+  if (!element) return;
+  element.textContent = message;
+  element.classList.remove('status-error', 'status-success', 'status-loading');
+  if (tone !== 'info') element.classList.add(`status-${tone}`);
+  element.title = error?.message || '';
 }
 
 let savedTheme = 'dark';
@@ -968,6 +994,8 @@ function bindProfileName() {
   profileNameSaveButton.addEventListener('click', saveProfileName);
 }
 
+adminReviewRefresh?.addEventListener('click', loadAdminReviewQueue);
+
 async function saveProfileName() {
   const user = currentUser();
   const name = profileNameInput.value.trim();
@@ -1544,14 +1572,10 @@ async function publishPhoto(event) {
   try {
     await uploadPrivateObject(storagePath, file);
     uploaded = true;
-    await insertRow('memories', {
-      user_id: user.id,
-      storage_path: storagePath,
-      media_type: 'image',
-      caption: captionInput.value.trim(),
-      // Send the review state explicitly; older deployments may have a different column default.
-      status: 'pending',
-      frame_item_id: frameId,
+    await callRpc('nexora_submit_memory', {
+      p_storage_path: storagePath,
+      p_caption: captionInput.value.trim(),
+      p_frame_item_id: frameId,
     });
     photoUploadForm.reset();
     if (previewUrl) URL.revokeObjectURL(previewUrl);
@@ -1569,7 +1593,7 @@ async function publishPhoto(event) {
         cleanupError = ` No se pudo limpiar el archivo temporal: ${cleanup.message}`;
       }
     }
-    uploadStatus.textContent = `No se pudo publicar la foto: ${error.message}.${cleanupError}`;
+    setStatus(uploadStatus, `${friendlyError(error, 'publicar la foto')}${cleanupError}`, 'error', error);
   } finally {
     publishPhotoButton.disabled = false;
   }

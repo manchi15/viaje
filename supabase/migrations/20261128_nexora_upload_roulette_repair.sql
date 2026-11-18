@@ -39,6 +39,11 @@ language plpgsql
 set search_path = public, pg_temp
 as $$
 begin
+  if auth.uid() is null then
+    raise exception 'AUTH_REQUIRED' using errcode = '28000';
+  end if;
+  -- Derive ownership from the verified JWT instead of trusting the browser payload.
+  new.user_id := auth.uid();
   new.status := 'pending';
   return new;
 end;
@@ -48,6 +53,50 @@ create trigger nexora_force_pending_memory
   before insert on public.memories
   for each row execute function public.nexora_force_pending_memory();
 alter table public.memories enable row level security;
+
+-- Publish through a narrow authenticated RPC instead of a direct PostgREST INSERT.
+create or replace function public.nexora_submit_memory(
+  p_storage_path text,
+  p_caption text default '',
+  p_frame_item_id uuid default null
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public, auth, storage, pg_temp
+set row_security = off
+as $$
+declare
+  v_user uuid := auth.uid();
+  v_memory public.memories%rowtype;
+begin
+  if v_user is null then
+    raise exception 'AUTH_REQUIRED' using errcode = '28000';
+  end if;
+  if p_storage_path is null
+     or (storage.foldername(p_storage_path))[1] <> v_user::text then
+    raise exception 'INVALID_STORAGE_OWNER' using errcode = '22023';
+  end if;
+  if not exists (
+    select 1 from storage.objects o
+    where o.bucket_id = 'nexora-photos' and o.name = p_storage_path
+  ) then
+    raise exception 'UPLOADED_OBJECT_NOT_FOUND' using errcode = 'P0002';
+  end if;
+  if char_length(coalesce(p_caption, '')) > 280 then
+    raise exception 'CAPTION_TOO_LONG' using errcode = '22023';
+  end if;
+
+  insert into public.memories (
+    user_id, storage_path, media_type, caption, status, frame_item_id
+  ) values (
+    v_user, p_storage_path, 'image', coalesce(p_caption, ''), 'pending', p_frame_item_id
+  ) returning * into v_memory;
+  return to_jsonb(v_memory);
+end;
+$$;
+revoke all on function public.nexora_submit_memory(text, text, uuid) from public, anon;
+grant execute on function public.nexora_submit_memory(text, text, uuid) to authenticated;
 
 drop policy if exists "nexora members upload to own folder" on storage.objects;
 create policy "nexora members upload to own folder" on storage.objects
@@ -145,3 +194,15 @@ grant execute on function public.nexora_spin_roulette(text, jsonb) to authentica
 
 commit;
 notify pgrst, 'reload schema';
+
+-- Show the policy and trigger installed by this repair in the SQL Editor results.
+select policyname, cmd, roles, with_check
+from pg_policies
+where schemaname = 'public' and tablename = 'memories'
+order by policyname;
+
+select tgname, tgenabled
+from pg_trigger
+where tgrelid = 'public.memories'::regclass
+  and tgname = 'nexora_force_pending_memory'
+  and not tgisinternal;
