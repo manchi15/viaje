@@ -263,6 +263,12 @@
             </div>
             <p class="phase-note">Puedes cambiar tu nombre visible y foto cuando quieras. El nombre no otorga permisos de administrador; la descripción estará disponible más adelante.</p>
           </section>
+          <section id="adminPanel" class="surface admin-panel" aria-labelledby="adminPanelTitle" hidden>
+            <p class="eyebrow">PANEL DE ADMINISTRACIÓN</p>
+            <h2 id="adminPanelTitle">Revisar fotos</h2>
+            <p id="adminReviewStatus" class="phase-note" role="status" aria-live="polite">Cargando publicaciones pendientes…</p>
+            <div id="adminReviewQueue" class="admin-review-queue" aria-live="polite"></div>
+          </section>
           <section class="profile-posts" aria-label="Publicaciones del perfil">
             <div class="profile-posts-heading"><span>▦</span> PUBLICACIONES</div>
             <div class="profile-posts-empty"><span>▧</span><strong>Aún no hay publicaciones</strong><p>Las fotos que compartas aparecerán en tu perfil.</p></div>

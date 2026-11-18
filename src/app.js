@@ -36,6 +36,9 @@ const profileAvatarFallback = document.querySelector('#profileAvatarFallback');
 const profilePhotoInput = document.querySelector('#profilePhotoInput');
 const profilePhotoButton = document.querySelector('#profilePhotoButton');
 const profilePhotoStatus = document.querySelector('#profilePhotoStatus');
+const adminPanel = document.querySelector('#adminPanel');
+const adminReviewStatus = document.querySelector('#adminReviewStatus');
+const adminReviewQueue = document.querySelector('#adminReviewQueue');
 const profileCropPanel = document.querySelector('#profileCropPanel');
 const profileCropPreview = document.querySelector('#profileCropPreview');
 const profileCropZoom = document.querySelector('#profileCropZoom');
@@ -856,7 +859,10 @@ async function loadProfile() {
     profileAdminBadge.hidden = true;
     try {
       const access = await selectRows('profiles', `select=is_admin&user_id=eq.${encodeURIComponent(user.id)}&limit=1`);
-      profileAdminBadge.hidden = access[0]?.is_admin !== true;
+      const isAdmin = access[0]?.is_admin === true;
+      profileAdminBadge.hidden = !isAdmin;
+      if (adminPanel) adminPanel.hidden = !isAdmin;
+      if (isAdmin) loadAdminReviewQueue();
     } catch { /* El rol sigue protegido por Supabase aunque no se pueda mostrar la insignia. */ }
     profileDisplayName.textContent = profile.display_name || 'Participante';
     profileNameInput.value = profile.display_name || '';
@@ -897,6 +903,64 @@ async function loadProfile() {
       : error.message;
     profileNameStatus.textContent = `No se pudo cargar tu nombre: ${message}`;
     profilePhotoStatus.textContent = `No se pudo cargar tu perfil: ${message}`;
+  }
+}
+
+async function loadAdminReviewQueue() {
+  if (!adminReviewQueue || !adminReviewStatus || !currentUser()) return;
+  adminReviewStatus.textContent = 'Cargando fotos pendientes…';
+  adminReviewQueue.replaceChildren();
+  try {
+    const rows = await selectRows('memories', 'select=id,user_id,storage_path,caption,created_at&status=eq.pending&media_type=eq.image&order=created_at.asc&limit=50');
+    if (!rows.length) {
+      adminReviewStatus.textContent = 'No hay fotos pendientes de revisión.';
+      return;
+    }
+    const [people, signed] = await Promise.all([
+      selectRows('trip_participants', 'select=user_id,display_name'),
+      signedObjectUrls(rows.map((row) => row.storage_path)),
+    ]);
+    const names = new Map(people.map((person) => [person.user_id, person.display_name]));
+    const urls = new Map(signed.map((entry) => [entry.path, entry.signedURL]));
+    for (const row of rows) {
+      const card = document.createElement('article');
+      card.className = 'admin-review-card';
+      const image = document.createElement('img');
+      image.src = urls.get(row.storage_path) || '';
+      image.alt = row.caption || 'Foto pendiente de revisión';
+      image.loading = 'lazy';
+      const details = document.createElement('div');
+      const author = document.createElement('strong');
+      author.textContent = names.get(row.user_id) || 'Participante';
+      const caption = document.createElement('p');
+      caption.textContent = row.caption || 'Sin descripción';
+      const actions = document.createElement('div');
+      actions.className = 'admin-review-actions';
+      for (const [approved, label] of [[true, 'Aprobar'], [false, 'Rechazar']]) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'frame-buy-button';
+        button.textContent = label;
+        button.addEventListener('click', async () => {
+          button.disabled = true;
+          try {
+            await callRpc('nexora_review_memory', { p_memory_id: row.id, p_approved: approved });
+            await loadAdminReviewQueue();
+            if (approved) await loadPhotoLeaderboard();
+          } catch (error) {
+            adminReviewStatus.textContent = `No se pudo ${approved ? 'aprobar' : 'rechazar'} la foto: ${error.message}`;
+            button.disabled = false;
+          }
+        });
+        actions.append(button);
+      }
+      details.append(author, caption, actions);
+      card.append(image, details);
+      adminReviewQueue.append(card);
+    }
+    adminReviewStatus.textContent = `${rows.length} foto${rows.length === 1 ? '' : 's'} pendiente${rows.length === 1 ? '' : 's'}.`;
+  } catch (error) {
+    adminReviewStatus.textContent = `No se pudo cargar la revisión: ${error.message}`;
   }
 }
 
@@ -1485,6 +1549,8 @@ async function publishPhoto(event) {
       storage_path: storagePath,
       media_type: 'image',
       caption: captionInput.value.trim(),
+      // Send the review state explicitly; older deployments may have a different column default.
+      status: 'pending',
       frame_item_id: frameId,
     });
     photoUploadForm.reset();

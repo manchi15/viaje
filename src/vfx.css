@@ -176,6 +176,9 @@
 .upload-preview:has(.vfx-frame) { display: block; max-height: none; overflow: visible; border: 0; background: transparent; }
 .upload-preview:has(.vfx-frame) > .vfx-frame { width: min(100%, 680px); margin-inline: auto; }
 .upload-preview .vfx-photo > img, .upload-preview .vfx-photo > video { max-height: 440px; object-fit: contain; }
+#photoPreview .vfx-photo { margin: 4%; }
+#photoPreview .vfx-frame--angel .vfx-frame-artwork { opacity: .76; filter: drop-shadow(0 0 2px rgba(231,201,142,.5)); }
+#photoPreview .vfx-frame--angel .vfx-aura { opacity: .28; }
 .market-item__art, .inventory-item { overflow: visible; }
 .market-vfx-preview { width: 100%; }
 .market-vfx-preview .vfx-frame { padding: 18px; }

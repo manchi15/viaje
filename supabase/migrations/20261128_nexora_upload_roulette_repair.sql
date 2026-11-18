@@ -30,7 +30,24 @@ begin
 end;
 $$;
 create policy "members submit own pending memories" on public.memories
-  for insert to authenticated with check (user_id = auth.uid() and status = 'pending');
+  for insert to authenticated with check (user_id = auth.uid());
+
+-- Always send new uploads to moderation, even if an older client omits status.
+create or replace function public.nexora_force_pending_memory()
+returns trigger
+language plpgsql
+set search_path = public, pg_temp
+as $$
+begin
+  new.status := 'pending';
+  return new;
+end;
+$$;
+drop trigger if exists nexora_force_pending_memory on public.memories;
+create trigger nexora_force_pending_memory
+  before insert on public.memories
+  for each row execute function public.nexora_force_pending_memory();
+alter table public.memories enable row level security;
 
 drop policy if exists "nexora members upload to own folder" on storage.objects;
 create policy "nexora members upload to own folder" on storage.objects
