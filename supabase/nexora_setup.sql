@@ -1,8 +1,15 @@
 -- NEXORA one-time initial setup for a NEW Supabase project.
 -- Run this complete file once in Supabase SQL Editor. It includes Market and album tables.
 -- Review before running on any project that already has application tables or policies.
--- Uploaded media uses a private bucket; create `nexora-photos` separately in Storage.
+-- Uploaded media uses the private `nexora-photos` Storage bucket created below.
 begin;
+
+-- Private media bucket used by photo uploads, profile images, and signed URLs.
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('nexora-photos', 'nexora-photos', false, 12582912,
+        array['image/jpeg','image/png','image/webp','image/gif'])
+on conflict (id) do update set name = excluded.name, public = false,
+  file_size_limit = excluded.file_size_limit, allowed_mime_types = excluded.allowed_mime_types;
 
 -- Additive Nexora Market schema. Safe to apply alongside the existing album tables.
 -- If public.profiles already exists with a different shape, stop before changing anything

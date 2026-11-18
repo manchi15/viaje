@@ -133,18 +133,17 @@ if (location.protocol === 'file:') {
   document.querySelector('#localFileNotice').hidden = false;
 }
 
-renderFrameCatalog();
-renderCollectibles();
-renderOwnedCollectibles();
-renderRouletteTitle();
-renderRouletteWheel();
+// Wire navigation before rendering optional content. If a catalog or visual
+// effect fails to initialize, the rest of the page must remain navigable.
 bindNavigation();
-bindPhotoPreview();
-bindPhotoManagement();
-bindProfileName();
-bindProfilePhoto();
-bindMarket();
-bindRoulette();
+for (const render of [renderFrameCatalog, renderCollectibles, renderOwnedCollectibles, renderRouletteTitle, renderRouletteWheel]) {
+  try { render(); }
+  catch (error) { console.error('NEXORA: no se pudo renderizar una sección inicial.', error); }
+}
+for (const bind of [bindPhotoPreview, bindPhotoManagement, bindProfileName, bindProfilePhoto, bindMarket, bindRoulette]) {
+  try { bind(); }
+  catch (error) { console.error('NEXORA: no se pudo conectar una sección de la interfaz.', error); }
+}
 connectAccount();
 updateCountdown();
 window.setInterval(updateCountdown, 1000);
@@ -801,9 +800,7 @@ async function connectAccount() {
   try {
     await restoreSession();
     startOnlinePresence();
-    await Promise.all([loadMarket(), loadProfile()]);
     startSharedRouletteSync();
-    await Promise.all([loadPhotoLeaderboard(), loadOwnPhotos()]);
     publishPhotoButton.disabled = false;
   } catch (error) {
     showConnectionError(`No se pudo conectar con Supabase: ${error.message}`);
@@ -813,6 +810,12 @@ async function connectAccount() {
     profilePhotoStatus.textContent = `No se pudo conectar tu perfil: ${error.message}`;
     return;
   }
+  await Promise.all([
+    loadMarket().catch((error) => { storeStatus.textContent = `No se pudo cargar la tienda: ${error.message}`; }),
+    loadProfile().catch((error) => { profileNameStatus.textContent = `No se pudo cargar tu perfil: ${error.message}`; }),
+    loadPhotoLeaderboard().catch((error) => { photoLeaderboardStatus.textContent = `No se pudo cargar la tabla: ${error.message}`; }),
+    loadOwnPhotos().catch((error) => { ownPhotosStatus.textContent = `No se pudieron cargar tus fotos: ${error.message}`; }),
+  ]);
   try {
     await claimCoinReward();
     window.setInterval(updateCoinReward, 1000);
