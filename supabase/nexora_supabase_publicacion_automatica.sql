@@ -1,7 +1,6 @@
--- NEXORA: reparación consolidada de carga, ruleta y publicación automática.
--- Incluye las actualizaciones hasta 20261130: feed inmediato y validación de marcos comprados.
--- Pega el archivo completo en Supabase SQL Editor después de las migraciones base.
--- Puede volver a ejecutarse con seguridad para reinstalar estas funciones y políticas.
+-- NEXORA: reparación final de fotos y ruleta.
+-- Ejecuta una sola vez, después de nexora_setup.sql y las migraciones anteriores.
+-- Puede volver a ejecutarse para reinstalar funciones y políticas.
 
 begin;
 
@@ -202,52 +201,29 @@ $$;
 revoke all on function public.nexora_spin_roulette(text, jsonb) from public, anon;
 grant execute on function public.nexora_spin_roulette(text, jsonb) to authenticated;
 
-commit;
-notify pgrst, 'reload schema';
-
--- Show the policy and trigger installed by this repair in the SQL Editor results.
-select policyname, cmd, roles, with_check
-from pg_policies
-where schemaname = 'public' and tablename = 'memories'
-order by policyname;
-
-select tgname, tgenabled
-from pg_trigger
-where tgrelid = 'public.memories'::regclass
-  and tgname = 'nexora_force_pending_memory'
-  and not tgisinternal;
-
-
--- Show each new photo in the private group feed as soon as it is uploaded.
--- Run after 20261128_nexora_upload_roulette_repair.sql. Safe to re-run.
-begin;
-
-create or replace function public.nexora_force_pending_memory()
-returns trigger
-language plpgsql
-set search_path = public, pg_temp
-as $$
-begin
-  if auth.uid() is null then
-    raise exception 'AUTH_REQUIRED' using errcode = '28000';
-  end if;
-  new.user_id := auth.uid();
-  new.status := 'approved';
-  return new;
-end;
-$$;
-
--- The existing submit RPC inserts the uploaded row; this trigger ensures it is
--- immediately visible to authenticated group members and the home feed.
-drop trigger if exists nexora_force_pending_memory on public.memories;
-create trigger nexora_force_pending_memory
-  before insert on public.memories
-  for each row execute function public.nexora_force_pending_memory();
-
 -- Publish already uploaded photos that were waiting in the private review queue.
 update public.memories
 set status = 'approved', reviewed_at = coalesce(reviewed_at, now())
 where status = 'pending' and media_type = 'image';
 
-notify pgrst, 'reload schema';
 commit;
+notify pgrst, 'reload schema';
+
+-- Read-only confirmation: both values should be true / enabled.
+select
+  to_regprocedure('public.nexora_submit_memory(text,text,uuid)') is not null as submit_rpc_installed,
+  exists (
+    select 1 from storage.buckets
+    where id = 'nexora-photos' and public = false
+  ) as private_photo_bucket_installed,
+  exists (
+    select 1 from pg_policies
+    where schemaname = 'storage' and tablename = 'objects'
+      and policyname = 'nexora members upload to own folder'
+  ) as own_folder_upload_policy_installed,
+  exists (
+    select 1 from pg_trigger
+    where tgrelid = to_regclass('public.memories')
+      and tgname = 'nexora_force_pending_memory'
+      and tgenabled <> 'D' and not tgisinternal
+  ) as photo_publish_trigger_enabled;

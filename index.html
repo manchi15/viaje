@@ -309,7 +309,7 @@
       </section>
     </main>
 
-    <nav class="bottom-nav" aria-label="Navegación principal">
+    <nav id="bottomNav" class="bottom-nav" aria-label="Navegación principal">
       <button type="button" data-screen="inicio" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"></path></svg><small>Inicio</small></button>
       <button type="button" data-screen="fotos"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><path d="m21 15-5-5L5 21"></path></svg><small>Fotos</small></button>
       <button type="button" class="nav-upload" data-screen="subir" aria-label="Subir una foto"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg><small>Subir</small></button>
@@ -319,6 +319,9 @@
       <button type="button" data-screen="perfil"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg><small>Perfil</small></button>
       <button type="button" data-screen="acerca"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 11v5M12 8h.01"></path></svg><small>Sobre mí</small></button>
     </nav>
+    <button id="bottomNavToggle" class="bottom-nav-toggle" type="button" aria-label="Ocultar navegación" aria-controls="bottomNav" aria-expanded="true">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>
+    </button>
     <div id="rouletteSpotlight" class="roulette-spotlight" aria-hidden="true" hidden>
       <div class="roulette-spotlight-content">
         <p id="rouletteSpotlightTitle" class="roulette-spotlight-title"></p>

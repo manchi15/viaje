@@ -7,6 +7,9 @@ const TRIP_START = new Date('2026-11-20T00:00:00-05:00').getTime();
 
 const screens = [...document.querySelectorAll('.screen')];
 const navButtons = [...document.querySelectorAll('[data-screen]')];
+const bottomNav = document.querySelector('#bottomNav');
+const bottomNavToggle = document.querySelector('#bottomNavToggle');
+const NAV_HIDDEN_KEY = 'nexora-bottom-nav-hidden-v1';
 const preview = document.querySelector('#photoPreview');
 const photoInput = document.querySelector('#photoInput');
 const frameSelect = document.querySelector('#frameSelect');
@@ -132,16 +135,16 @@ function friendlyError(error, context = 'la solicitud') {
   if (lower.includes('nexora_spin_roulette')) return `Falta aplicar la migración 20261125 para activar la ruleta. (${raw})`;
   if (lower.includes('nexora_ping_presence')) return `Falta aplicar la migración 20261127 para activar el contador en línea. (${raw})`;
   if (lower.includes('nexora_ensure_participant')) return `Falta aplicar la migración 20261126 para reparar el perfil. (${raw})`;
-  if (lower.includes('nexora_review_memory')) return `No está disponible la revisión de fotos. Aplica las migraciones de álbum y carga 20261128. (${raw})`;
+  if (lower.includes('nexora_review_memory')) return `No está disponible la revisión de fotos. Aplica las migraciones de álbum y supabase/nexora_supabase_publicacion_automatica.sql. (${raw})`;
   if (lower.includes('nexora_submit_memory') || lower.includes('pgrst202')) {
-    return `Falta actualizar Supabase para publicar fotos. Ejecuta de nuevo la migración 20261128 y recarga la web. (${raw})`;
+    return `Falta actualizar Supabase para publicar fotos. Ejecuta supabase/nexora_supabase_publicacion_automatica.sql y recarga la web. (${raw})`;
   }
   if (lower.includes('row-level security') || lower.includes('42501')) {
     return `Supabase bloqueó ${context}. Verifica que la sesión esté activa y que la web y Supabase usen el mismo proyecto. (${raw})`;
   }
   if (lower.includes('auth_required') || error?.status === 401) return 'La sesión venció. Recarga la página y vuelve a intentarlo.';
   if (lower.includes('uploaded_object_not_found') || lower.includes('bucket not found')) {
-    return `No se encontró la foto en el almacenamiento. Ejecuta la migración 20261128 y vuelve a probar. (${raw})`;
+    return `No se encontró la foto en el almacenamiento. Ejecuta supabase/nexora_supabase_publicacion_automatica.sql y vuelve a probar. (${raw})`;
   }
   if (/failed to fetch|networkerror|load failed/i.test(raw)) return 'No hay conexión con Supabase. Revisa internet e inténtalo de nuevo.';
   return `${context}: ${raw}`;
@@ -191,6 +194,19 @@ window.setInterval(updateCountdown, 1000);
 openScreen(location.hash.slice(1) || 'inicio', false);
 
 function bindNavigation() {
+  let navHidden = false;
+  try { navHidden = localStorage.getItem(NAV_HIDDEN_KEY) === 'true'; } catch (error) {}
+  const updateNavVisibility = () => {
+    document.body.classList.toggle('bottom-nav-hidden', navHidden);
+    bottomNavToggle?.setAttribute('aria-expanded', String(!navHidden));
+    bottomNavToggle?.setAttribute('aria-label', navHidden ? 'Mostrar navegación' : 'Ocultar navegación');
+  };
+  updateNavVisibility();
+  bottomNavToggle?.addEventListener('click', () => {
+    navHidden = !navHidden;
+    try { localStorage.setItem(NAV_HIDDEN_KEY, String(navHidden)); } catch (error) {}
+    updateNavVisibility();
+  });
   navButtons.forEach((button) => {
     button.addEventListener('click', () => openScreen(button.dataset.screen));
   });
