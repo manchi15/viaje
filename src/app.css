@@ -574,6 +574,9 @@ body[data-theme="dark"] .private-badge {
 .feed-post-image { display: block; width: 100%; height: auto; max-height: min(78vh,780px); background: #0e0c0d; object-fit: contain; }
 .feed-post-caption { padding: 14px 17px 17px; }
 .feed-post-caption p { margin: 0; color: #eee5e0; font-size: .83rem; line-height: 1.55; overflow-wrap: anywhere; }
+.feed-status { margin: 0; padding: 12px 14px; border: 1px solid rgba(230,110,110,.28); border-radius: 12px; background: rgba(150,42,49,.1); color: #f0b1ad; font-size: .78rem; line-height: 1.5; overflow-wrap: anywhere; }
+.feed-status[hidden], .feed-retry-button[hidden] { display: none; }
+.feed-retry-button { justify-self: start; min-height: 40px; padding: 0 14px; border: 1px solid rgba(215,183,126,.3); border-radius: 999px; background: rgba(215,183,126,.08); color: #ead5ac; font-size: .72rem; font-weight: 650; cursor: pointer; }
 .phase-note.status-error { padding: 11px 13px; border: 1px solid rgba(230,110,110,.32); border-radius: 11px; background: rgba(150,42,49,.12); color: #f0b1ad; }
 .phase-note.status-success { color: #9dccab; }
 .phase-note.status-loading { color: #d4bd91; }

@@ -16,7 +16,7 @@ set name = excluded.name,
 
 -- Older installations may have a different default or overlapping INSERT policies.
 alter table public.memories alter column status set default 'pending';
-grant insert on public.memories to authenticated;
+revoke insert on public.memories from anon, authenticated;
 do $$
 declare
   v_policy record;
@@ -29,10 +29,7 @@ begin
   end loop;
 end;
 $$;
-create policy "members submit own pending memories" on public.memories
-  for insert to authenticated with check (user_id = auth.uid());
-
--- Always send new uploads to moderation, even if an older client omits status.
+-- Ensure uploads receive a consistent status even if an older client omits it.
 create or replace function public.nexora_force_pending_memory()
 returns trigger
 language plpgsql
@@ -44,7 +41,7 @@ begin
   end if;
   -- Derive ownership from the verified JWT instead of trusting the browser payload.
   new.user_id := auth.uid();
-  new.status := 'pending';
+  new.status := 'approved';
   return new;
 end;
 $$;

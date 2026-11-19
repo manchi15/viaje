@@ -72,6 +72,8 @@ const ROULETTE_RESULT_DISPLAY_MS = 2200;
 const rewardCountdown = document.querySelector('#coinRewardCountdown');
 const homeFeedList = document.querySelector('#homeFeedList');
 const homeFeedEmpty = document.querySelector('.feed-column > .feed-card');
+const homeFeedStatus = document.querySelector('#homeFeedStatus');
+const homeFeedRetry = document.querySelector('#homeFeedRetry');
 // A Vite build serves public assets from BASE_URL; raw GitHub uploads keep them under /public.
 const baseUrl = import.meta.env?.BASE_URL || './public/';
 const logoPath = location.protocol === 'file:'
@@ -124,6 +126,13 @@ function applyTheme(themeName) {
 function friendlyError(error, context = 'la solicitud') {
   const raw = String(error?.message || 'Error desconocido');
   const lower = raw.toLowerCase();
+  if (lower.includes('frame_not_owned')) return 'Ese marco no está desbloqueado para esta cuenta. Elige otro o vuelve a cargar la tienda.';
+  if (lower.includes('caption_too_long')) return 'La descripción supera el máximo permitido. Acórtala e inténtalo de nuevo.';
+  if (lower.includes('invalid_storage_owner')) return 'No se pudo validar la foto subida. Recarga la página y vuelve a elegirla.';
+  if (lower.includes('nexora_spin_roulette')) return `Falta aplicar la migración 20261125 para activar la ruleta. (${raw})`;
+  if (lower.includes('nexora_ping_presence')) return `Falta aplicar la migración 20261127 para activar el contador en línea. (${raw})`;
+  if (lower.includes('nexora_ensure_participant')) return `Falta aplicar la migración 20261126 para reparar el perfil. (${raw})`;
+  if (lower.includes('nexora_review_memory')) return `No está disponible la revisión de fotos. Aplica las migraciones de álbum y carga 20261128. (${raw})`;
   if (lower.includes('nexora_submit_memory') || lower.includes('pgrst202')) {
     return `Falta actualizar Supabase para publicar fotos. Ejecuta de nuevo la migración 20261128 y recarga la web. (${raw})`;
   }
@@ -504,7 +513,7 @@ function showRouletteSyncError(error) {
   rouletteSyncReady = false;
   rouletteSyncStatus.textContent = error.status === 404
     ? 'Falta ejecutar 20261125_nexora_shared_roulette.sql en Supabase para sincronizar la ruleta.'
-    : `No se pudo sincronizar la ruleta: ${error.message}`;
+    : friendlyError(error, 'sincronizar la ruleta');
   updateRouletteButton();
 }
 
@@ -649,7 +658,7 @@ async function pollSharedRouletteState() {
       showRouletteSyncError(error);
       stopSharedRoulettePolling();
     } else {
-      rouletteSyncStatus.textContent = `No se pudo sincronizar la ruleta: ${error.message}`;
+      rouletteSyncStatus.textContent = friendlyError(error, 'sincronizar la ruleta');
       rouletteSyncReady = false;
       updateRouletteButton();
     }
@@ -702,7 +711,7 @@ function bindRoulette() {
       rouletteRequestPending = false;
       rouletteParticipants.disabled = false;
       rouletteTitleInput.disabled = false;
-      rouletteResult.textContent = `No se pudo iniciar el giro: ${error.message}`;
+      rouletteResult.textContent = friendlyError(error, 'iniciar el giro');
       if (error.status === 404) {
         showRouletteSyncError(error);
         stopSharedRoulettePolling();
@@ -811,7 +820,7 @@ async function purchaseStoreItem(item, category) {
     renderWallet();
     storeStatus.textContent = `¡${item.name} ya es tuyo! Tu saldo es ${formatNumber(coinBalance)} NX.`;
   } catch (error) {
-    storeStatus.textContent = `No se pudo comprar ${category === 'frame' ? 'el marco' : 'la figurita'}: ${error.message}`;
+    storeStatus.textContent = friendlyError(error, `comprar ${category === 'frame' ? 'el marco' : 'la figurita'}`);
   } finally {
     purchasePending = false;
     renderFrameCatalog();
@@ -835,7 +844,7 @@ async function connectAccount() {
     startSharedRouletteSync();
     publishPhotoButton.disabled = false;
   } catch (error) {
-    showConnectionError(`No se pudo conectar con Supabase: ${error.message}`);
+    showConnectionError(friendlyError(error, 'conectar con Supabase'));
     ownedCollectiblesStatus.textContent = `No se pudo cargar tu colección: ${error.message}`;
     rouletteSyncStatus.textContent = `No se pudo conectar la ruleta: ${error.message}`;
     profileNameStatus.textContent = `No se pudo conectar tu perfil: ${error.message}`;
@@ -843,10 +852,10 @@ async function connectAccount() {
     return;
   }
   await Promise.all([
-    loadMarket().catch((error) => { storeStatus.textContent = `No se pudo cargar la tienda: ${error.message}`; }),
-    loadProfile().catch((error) => { profileNameStatus.textContent = `No se pudo cargar tu perfil: ${error.message}`; }),
-    loadPhotoLeaderboard().catch((error) => { photoLeaderboardStatus.textContent = `No se pudo cargar la tabla: ${error.message}`; }),
-    loadOwnPhotos().catch((error) => { ownPhotosStatus.textContent = `No se pudieron cargar tus fotos: ${error.message}`; }),
+    loadMarket().catch((error) => { storeStatus.textContent = friendlyError(error, 'cargar la tienda'); }),
+    loadProfile().catch((error) => { profileNameStatus.textContent = friendlyError(error, 'cargar tu perfil'); }),
+    loadPhotoLeaderboard().catch((error) => { photoLeaderboardStatus.textContent = friendlyError(error, 'cargar la tabla'); }),
+    loadOwnPhotos().catch((error) => { ownPhotosStatus.textContent = friendlyError(error, 'cargar tus fotos'); }),
     loadHomeFeed(),
   ]);
   window.setInterval(() => { if (!document.hidden) loadHomeFeed(); }, 30_000);
@@ -866,6 +875,8 @@ async function loadHomeFeed() {
     if (!rows.length) {
       homeFeedList.replaceChildren();
       homeFeedEmpty.hidden = false;
+      homeFeedStatus.hidden = true;
+      homeFeedRetry.hidden = true;
       return;
     }
     const people = await selectRows('trip_participants', 'select=user_id,display_name,avatar_path');
@@ -911,8 +922,13 @@ async function loadHomeFeed() {
     });
     homeFeedList.replaceChildren(...cards);
     homeFeedEmpty.hidden = cards.length > 0;
+    homeFeedStatus.hidden = true;
+    homeFeedRetry.hidden = true;
   } catch (error) {
     console.error('No se pudo actualizar el feed de NEXORA.', error);
+    homeFeedStatus.textContent = friendlyError(error, 'cargar el feed');
+    homeFeedStatus.hidden = false;
+    homeFeedRetry.hidden = false;
   }
 }
 
@@ -1039,7 +1055,7 @@ async function loadAdminReviewQueue() {
             await loadAdminReviewQueue();
             if (approved) await Promise.all([loadPhotoLeaderboard(), loadHomeFeed()]);
           } catch (error) {
-            adminReviewStatus.textContent = `No se pudo ${approved ? 'aprobar' : 'rechazar'} la foto: ${error.message}`;
+            adminReviewStatus.textContent = friendlyError(error, approved ? 'aprobar la foto' : 'rechazar la foto');
             button.disabled = false;
           }
         });
@@ -1060,6 +1076,7 @@ function bindProfileName() {
 }
 
 adminReviewRefresh?.addEventListener('click', loadAdminReviewQueue);
+homeFeedRetry?.addEventListener('click', () => currentUser() ? loadHomeFeed() : connectAccount());
 
 async function saveProfileName() {
   const user = currentUser();
@@ -1090,7 +1107,7 @@ async function saveProfileName() {
     profileNameStatus.textContent = 'Nombre actualizado. Este cambio no modifica permisos.';
     await loadPhotoLeaderboard();
   } catch (error) {
-    profileNameStatus.textContent = `No se pudo guardar el nombre: ${error.message}`;
+    profileNameStatus.textContent = friendlyError(error, 'guardar el nombre');
   } finally {
     profileNamePending = false;
     profileNameSaveButton.disabled = false;
@@ -1213,7 +1230,7 @@ async function saveProfilePhotoCrop() {
     const croppedFile = new File([blob], 'avatar.jpg', { type: 'image/jpeg' });
     await uploadProfilePhoto(croppedFile);
   } catch (error) {
-    profilePhotoStatus.textContent = `No se pudo preparar la foto: ${error.message}`;
+    profilePhotoStatus.textContent = friendlyError(error, 'preparar la foto');
   } finally {
     profileCropSave.disabled = false;
     profileCropCancel.disabled = false;
@@ -1337,7 +1354,7 @@ async function loadPhotoLeaderboard() {
       : 'Aún no hay participantes en el ranking.';
   } catch (error) {
     photoLeaderboard.replaceChildren();
-    photoLeaderboardStatus.textContent = `No se pudo cargar el ranking: ${error.message}`;
+    photoLeaderboardStatus.textContent = friendlyError(error, 'cargar el ranking');
   } finally {
     photoLeaderboard.setAttribute('aria-busy', 'false');
   }
@@ -1379,7 +1396,7 @@ async function loadOwnPhotos() {
   } catch (error) {
     ownPhotos = [];
     renderOwnPhotos();
-    ownPhotosStatus.textContent = `No se pudieron cargar tus fotos: ${error.message}`;
+    ownPhotosStatus.textContent = friendlyError(error, 'cargar tus fotos');
   } finally {
     ownPhotoGrid.setAttribute('aria-busy', 'false');
   }
@@ -1474,7 +1491,7 @@ async function deleteOwnPhoto(photo) {
     }
     await loadPhotoLeaderboard();
   } catch (error) {
-    ownPhotosStatus.textContent = `No se pudo eliminar la foto: ${error.message}`;
+    ownPhotosStatus.textContent = friendlyError(error, 'eliminar la foto');
   } finally {
     deletingPhotoId = '';
     renderOwnPhotos();
@@ -1535,7 +1552,12 @@ function renderPhotoLeaderboard(entries) {
 
 function showConnectionError(message) {
   storeStatus.textContent = message;
-  uploadStatus.textContent = message;
+  setStatus(uploadStatus, message, 'error');
+  if (homeFeedStatus) {
+    homeFeedStatus.textContent = message;
+    homeFeedStatus.hidden = false;
+  }
+  if (homeFeedRetry) homeFeedRetry.hidden = false;
   publishPhotoButton.disabled = true;
   setRewardCountdown(message);
 }
@@ -1647,7 +1669,7 @@ async function publishPhoto(event) {
     previewUrl = '';
     document.querySelector('#fileLabel').textContent = 'Elegir fotografía';
     renderPhotoPreview();
-    uploadStatus.textContent = 'Foto enviada para revisión. El marco quedará guardado con tu recuerdo.';
+    uploadStatus.textContent = 'Foto publicada en el álbum del grupo. El marco quedará guardado con tu recuerdo.';
     await Promise.all([loadPhotoLeaderboard(), loadOwnPhotos(), loadHomeFeed()]);
   } catch (error) {
     let cleanupError = '';
